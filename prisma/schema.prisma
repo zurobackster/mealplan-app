@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum MealSlot {
+  BREAKFAST
+  LUNCH
+  DINNER
+  OTHER
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  meals     Meal[]
+}
+
+model Meal {
+  id         Int        @id @default(autoincrement())
+  title      String
+  rating     Int        @default(0)
+  imageUrl   String?
+  recipeText String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  categoryId Int?
+  category   Category?  @relation(fields: [categoryId], references: [id])
+
+  plannedMeals PlannedMeal[]
+}
+
+model WeeklyPlan {
+  id            Int           @id @default(autoincrement())
+  weekStartDate DateTime      @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  plannedMeals  PlannedMeal[]
+}
+
+model PlannedMeal {
+  id           Int        @id @default(autoincrement())
+  weeklyPlanId Int
+  mealId       Int
+  dayOfWeek    Int
+  slot         MealSlot
+  position     Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  weeklyPlan   WeeklyPlan @relation(fields: [weeklyPlanId], references: [id])
+  meal         Meal       @relation(fields: [mealId], references: [id])
+}
