@@ -8,6 +8,7 @@ import { MealListPanel } from '@/components/meals/MealListPanel';
 import { CategoryManagerModal } from '@/components/modals/CategoryManagerModal';
 import { MealEditorModal } from '@/components/modals/MealEditorModal';
 import { ImageCropperModal } from '@/components/modals/ImageCropperModal';
+import { WeekPlanner } from '@/components/planner/WeekPlanner';
 
 interface Meal {
   id: number;
@@ -126,15 +127,8 @@ export default function PlannerPage() {
         </Box>
 
         {/* Right Panel - Weekly Planner (40%) */}
-        <Box style={{ width: '40%', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 'xl' }}>
-          <Paper p="xl" withBorder>
-            <Text size="lg" fw={600} mb="md">
-              Weekly Planner
-            </Text>
-            <Text c="dimmed">
-              The weekly planner with drag & drop will be implemented in Phase 5.
-            </Text>
-          </Paper>
+        <Box style={{ width: '40%', overflow: 'hidden' }}>
+          <WeekPlanner />
         </Box>
       </Box>
 
