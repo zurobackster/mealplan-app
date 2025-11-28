@@ -2,6 +2,7 @@
 
 import { Card, Image, Text, Badge, Group, Stack, Rating } from '@mantine/core';
 import { IconStar } from '@tabler/icons-react';
+import { useDraggable } from '@dnd-kit/core';
 
 interface MealCardProps {
   id: number;
@@ -22,8 +23,21 @@ export function MealCard({
   categoryColor,
   onClick,
 }: MealCardProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id,
+    data: { type: 'catalog-meal', id, title, imageUrl, rating, categoryName, categoryColor },
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDragging ? 0.5 : 1,
+      }
+    : undefined;
+
   return (
-    <Card
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <Card
       shadow="sm"
       padding="0"
       radius="md"
@@ -93,5 +107,6 @@ export function MealCard({
         </Group>
       </Stack>
     </Card>
+    </div>
   );
 }

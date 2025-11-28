@@ -1,6 +1,6 @@
 'use client';
 
-import { Paper, Text, Stack } from '@mantine/core';
+import { Paper, Text, Stack, ScrollArea } from '@mantine/core';
 import { SlotDropZone } from './SlotDropZone';
 import { getDayName } from '@/lib/utils/date';
 
@@ -36,21 +36,53 @@ export function DayColumn({ dayOfWeek, meals, onRemoveMeal }: DayColumnProps) {
   };
 
   return (
-    <Paper p="sm" withBorder style={{ height: '100%' }}>
-      <Text size="sm" fw={700} mb="md" ta="center">
+    <Paper
+      p="md"
+      withBorder
+      shadow="sm"
+      style={{
+        minWidth: 200,
+        maxWidth: 220,
+        flex: '0 0 auto',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: '12px',
+        backgroundColor: '#fafafa',
+        borderWidth: '1px',
+        borderColor: '#e0e0e0',
+      }}
+    >
+      {/* Day Header - Fixed */}
+      <Text
+        size="sm"
+        fw={700}
+        mb="md"
+        ta="center"
+        style={{
+          padding: '8px',
+          backgroundColor: 'white',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+        }}
+      >
         {dayName}
       </Text>
-      <Stack gap="sm">
-        {SLOTS.map((slot) => (
-          <SlotDropZone
-            key={slot}
-            dayOfWeek={dayOfWeek}
-            slot={slot}
-            meals={getMealsForSlot(slot)}
-            onRemoveMeal={onRemoveMeal}
-          />
-        ))}
-      </Stack>
+
+      {/* Scrollable Meal Slots */}
+      <ScrollArea style={{ flex: 1 }} type="auto" offsetScrollbars scrollbarSize={8}>
+        <Stack gap="md" pr="xs">
+          {SLOTS.map((slot) => (
+            <SlotDropZone
+              key={slot}
+              dayOfWeek={dayOfWeek}
+              slot={slot}
+              meals={getMealsForSlot(slot)}
+              onRemoveMeal={onRemoveMeal}
+            />
+          ))}
+        </Stack>
+      </ScrollArea>
     </Paper>
   );
 }

@@ -2,13 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Text, Group, Box, Paper } from '@mantine/core';
+import { Button, Text, Group, Box, Paper, Card } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragEndEvent,
+} from '@dnd-kit/core';
 import { MealListPanel } from '@/components/meals/MealListPanel';
 import { CategoryManagerModal } from '@/components/modals/CategoryManagerModal';
 import { MealEditorModal } from '@/components/modals/MealEditorModal';
 import { ImageCropperModal } from '@/components/modals/ImageCropperModal';
 import { WeekPlanner } from '@/components/planner/WeekPlanner';
+import { getMonday, formatISODate } from '@/lib/utils/date';
 
 interface Meal {
   id: number;
@@ -20,6 +31,25 @@ interface Meal {
     id: number;
     name: string;
   } | null;
+}
+
+interface WeeklyPlan {
+  id: number;
+  plannedMeals: PlannedMeal[];
+}
+
+interface PlannedMeal {
+  id: number;
+  dayOfWeek: number;
+  slot: string;
+  meal: {
+    id: number;
+    title: string;
+    imageUrl: string | null;
+    category?: {
+      color: string | null;
+    } | null;
+  };
 }
 
 export default function PlannerPage() {
@@ -35,6 +65,24 @@ export default function PlannerPage() {
   const [imageCropperCallback, setImageCropperCallback] = useState<((url: string) => void) | null>(null);
   const [mealListKey, setMealListKey] = useState(0);
 
+  // Drag-and-drop state
+  const [activeId, setActiveId] = useState<number | null>(null);
+  const [activeMeal, setActiveMeal] = useState<any | null>(null);
+
+  // Weekly planner state
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan | null>(null);
+  const [plannerLoading, setPlannerLoading] = useState(true);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
   useEffect(() => {
     fetch('/api/auth/session')
       .then((res) => res.json())
@@ -46,6 +94,157 @@ export default function PlannerPage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  // Fetch weekly plan
+  const fetchWeeklyPlan = async (date: Date) => {
+    try {
+      setPlannerLoading(true);
+      const monday = getMonday(date);
+      const weekStartDate = formatISODate(monday);
+
+      const response = await fetch(`/api/weekly-plans?weekStartDate=${weekStartDate}`);
+      if (response.ok) {
+        const data = await response.json();
+        setWeeklyPlan(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch weekly plan:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to load weekly plan',
+        color: 'red',
+      });
+    } finally {
+      setPlannerLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWeeklyPlan(selectedDate);
+  }, [selectedDate]);
+
+  // Drag handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    setActiveId(active.id as number);
+    setActiveMeal(active.data.current);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setActiveMeal(null);
+
+    if (!over || !weeklyPlan) return;
+
+    const overId = over.id as string;
+
+    // Check if dropping on planner slot (format: "dayOfWeek-slot")
+    if (typeof overId === 'string' && overId.includes('-')) {
+      const [dayOfWeek, slot] = overId.split('-');
+      const mealId = active.id as number;
+
+      // Determine if this is from catalog or within planner
+      const isFromCatalog = active.data.current?.type === 'catalog-meal';
+
+      if (isFromCatalog) {
+        // Add meal to planner via POST /api/planned-meals
+        try {
+          const monday = getMonday(selectedDate);
+          const weekStartDate = formatISODate(monday);
+
+          // Get weekly plan (it should exist from fetch, but ensure it)
+          const response = await fetch('/api/planned-meals', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              weeklyPlanId: weeklyPlan.id,
+              mealId,
+              dayOfWeek: parseInt(dayOfWeek),
+              slot,
+              position: 0,
+            }),
+          });
+
+          if (response.ok) {
+            fetchWeeklyPlan(selectedDate);
+            notifications.show({
+              title: 'Added',
+              message: 'Meal added to plan',
+              color: 'green',
+            });
+          }
+        } catch (error) {
+          notifications.show({
+            title: 'Error',
+            message: 'Failed to add meal',
+            color: 'red',
+          });
+        }
+      } else {
+        // Move existing planned meal
+        const plannedMeal = weeklyPlan.plannedMeals.find((m) => m.id === mealId);
+        if (!plannedMeal) return;
+
+        // Check if it's the same slot
+        if (
+          plannedMeal.dayOfWeek === parseInt(dayOfWeek) &&
+          plannedMeal.slot === slot
+        ) {
+          return; // No change
+        }
+
+        try {
+          const response = await fetch(`/api/planned-meals/${mealId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              dayOfWeek: parseInt(dayOfWeek),
+              slot,
+            }),
+          });
+
+          if (response.ok) {
+            fetchWeeklyPlan(selectedDate);
+            notifications.show({
+              title: 'Moved',
+              message: 'Meal moved successfully',
+              color: 'green',
+            });
+          }
+        } catch (error) {
+          notifications.show({
+            title: 'Error',
+            message: 'Failed to move meal',
+            color: 'red',
+          });
+        }
+      }
+    }
+  };
+
+  const handleRemoveMeal = async (plannedMealId: number) => {
+    try {
+      const response = await fetch(`/api/planned-meals/${plannedMealId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        fetchWeeklyPlan(selectedDate);
+        notifications.show({
+          title: 'Removed',
+          message: 'Meal removed from plan',
+          color: 'blue',
+        });
+      }
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to remove meal',
+        color: 'red',
+      });
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -94,43 +293,64 @@ export default function PlannerPage() {
   }
 
   return (
-    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Paper p="md" shadow="sm">
-        <Group justify="space-between">
-          <div>
-            <Text size="xl" fw={700}>
-              Meal Planner
-            </Text>
-            {user && (
-              <Text c="dimmed" size="sm">
-                Welcome, {user.username}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <Paper p="md" shadow="sm">
+          <Group justify="space-between">
+            <div>
+              <Text size="xl" fw={700}>
+                Meal Planner
               </Text>
-            )}
-          </div>
-          <Button onClick={handleLogout} variant="outline" color="red" size="sm">
-            Logout
-          </Button>
-        </Group>
-      </Paper>
+              {user && (
+                <Text c="dimmed" size="sm">
+                  Welcome, {user.username}
+                </Text>
+              )}
+            </div>
+            <Button onClick={handleLogout} variant="outline" color="red" size="sm">
+              Logout
+            </Button>
+          </Group>
+        </Paper>
 
-      {/* Main Content - Split View */}
-      <Box style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Left Panel - Meal Catalog (60%) */}
-        <Box style={{ width: '60%', borderRight: '1px solid #dee2e6' }}>
-          <MealListPanel
-            key={mealListKey}
-            onEditMeal={handleOpenMealEditor}
-            onCreateMeal={() => handleOpenMealEditor()}
-            onManageCategories={() => setCategoryModalOpened(true)}
-          />
-        </Box>
+        {/* Main Content - Split View */}
+        <Box style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Left Panel - Meal Catalog (50%) */}
+          <Box style={{ width: '50%', borderRight: '1px solid #dee2e6' }}>
+            <MealListPanel
+              key={mealListKey}
+              onEditMeal={handleOpenMealEditor}
+              onCreateMeal={() => handleOpenMealEditor()}
+              onManageCategories={() => setCategoryModalOpened(true)}
+            />
+          </Box>
 
-        {/* Right Panel - Weekly Planner (40%) */}
-        <Box style={{ width: '40%', overflow: 'hidden' }}>
-          <WeekPlanner />
+          {/* Right Panel - Weekly Planner (50%) */}
+          <Box
+            style={{
+              width: '50%',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              padding: '16px',
+              backgroundColor: '#f8f9fa',
+            }}
+          >
+            <WeekPlanner
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              weeklyPlan={weeklyPlan}
+              loading={plannerLoading}
+              onRemoveMeal={handleRemoveMeal}
+            />
+          </Box>
         </Box>
-      </Box>
 
       {/* Modals */}
       <CategoryManagerModal
@@ -153,5 +373,17 @@ export default function PlannerPage() {
         onImageCropped={handleImageCropped}
       />
     </Box>
+
+      {/* Drag Overlay */}
+      <DragOverlay>
+        {activeMeal ? (
+          <Card shadow="lg" p="sm" style={{ opacity: 0.9, cursor: 'grabbing' }}>
+            <Text size="sm" fw={500}>
+              {activeMeal.title || 'Moving meal...'}
+            </Text>
+          </Card>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 }

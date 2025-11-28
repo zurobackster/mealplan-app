@@ -43,35 +43,55 @@ export function SlotDropZone({
   return (
     <Paper
       ref={setNodeRef}
-      p="xs"
+      p="sm"
       withBorder
       style={{
-        minHeight: 80,
-        backgroundColor: isOver ? '#f0f0ff' : 'white',
-        borderStyle: 'dashed',
-        borderColor: isOver ? '#5c7cfa' : '#dee2e6',
+        minHeight: 100,
+        maxHeight: meals.length > 0 ? 'none' : 100,
+        backgroundColor: isOver
+          ? 'rgba(92, 124, 250, 0.08)'
+          : meals.length > 0
+          ? 'white'
+          : 'rgba(248, 249, 250, 0.5)',
+        borderStyle: meals.length > 0 ? 'solid' : 'dashed',
+        borderColor: isOver ? '#5c7cfa' : meals.length > 0 ? '#e9ecef' : '#ced4da',
         borderWidth: 2,
-        transition: 'all 0.2s',
+        borderRadius: '8px',
+        transition: 'all 0.2s ease',
+        boxShadow: isOver ? '0 2px 8px rgba(92, 124, 250, 0.15)' : 'none',
       }}
     >
-      <Text size="xs" fw={600} c="dimmed" mb="xs">
+      <Text
+        size="xs"
+        fw={600}
+        c={meals.length > 0 ? 'gray.7' : 'dimmed'}
+        mb={meals.length > 0 ? 'xs' : 0}
+        style={{
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px',
+        }}
+      >
         {slotLabels[slot] || slot}
       </Text>
-      <SortableContext
-        items={meals.map((m) => m.id)}
-        strategy={verticalListSortingStrategy}
-      >
+
+      <SortableContext items={meals.map((m) => m.id)} strategy={verticalListSortingStrategy}>
         <Stack gap="xs">
-          {meals.map((plannedMeal) => (
-            <PlannedMealCard
-              key={plannedMeal.id}
-              id={plannedMeal.id}
-              title={plannedMeal.meal.title}
-              imageUrl={plannedMeal.meal.imageUrl}
-              categoryColor={plannedMeal.meal.category?.color}
-              onRemove={() => onRemoveMeal(plannedMeal.id)}
-            />
-          ))}
+          {meals.length === 0 ? (
+            <Text size="xs" c="dimmed" ta="center" py="sm">
+              Drop meal here
+            </Text>
+          ) : (
+            meals.map((plannedMeal) => (
+              <PlannedMealCard
+                key={plannedMeal.id}
+                id={plannedMeal.id}
+                title={plannedMeal.meal.title}
+                imageUrl={plannedMeal.meal.imageUrl}
+                categoryColor={plannedMeal.meal.category?.color}
+                onRemove={() => onRemoveMeal(plannedMeal.id)}
+              />
+            ))
+          )}
         </Stack>
       </SortableContext>
     </Paper>
