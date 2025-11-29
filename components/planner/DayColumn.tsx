@@ -56,8 +56,8 @@ export function DayColumn({ dayOfWeek, monday, meals, onRemoveMeal }: DayColumnP
       withBorder
       shadow="sm"
       style={{
-        minWidth: 200,
-        maxWidth: 220,
+        minWidth: 260,
+        maxWidth: 286,
         flex: '0 0 auto',
         height: '100%',
         display: 'flex',

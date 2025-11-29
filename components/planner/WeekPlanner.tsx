@@ -19,6 +19,7 @@ interface PlannedMeal {
   meal: {
     id: number;
     title: string;
+    rating: number;
     imageUrl: string | null;
     category?: {
       color: string | null;

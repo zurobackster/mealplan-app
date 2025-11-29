@@ -95,19 +95,20 @@ export function PlannedMealCard({
       }}
     >
       <Group gap="xs" wrap="nowrap" align="flex-start">
-        <Image
-          src={imageUrl || '/uploads/placeholder.jpg'}
-          alt={title}
-          width={40}
-          height={40}
-          radius="sm"
-          fit="cover"
-          fallbackSrc="https://placehold.co/40x40/e0e0e0/666666?text=M"
-          draggable={false}
-          style={{ flexShrink: 0 }}
-        />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <Text size="sm" fw={500} lineClamp={1} mb={2}>
+        <div style={{ width: 40, height: 40, flexShrink: 0 }}>
+          <Image
+            src={imageUrl || '/uploads/placeholder.jpg'}
+            alt={title}
+            width={40}
+            height={40}
+            radius="sm"
+            fit="cover"
+            fallbackSrc="https://placehold.co/40x40/e0e0e0/666666?text=M"
+            draggable={false}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          <Text size="sm" fw={500} lineClamp={1} mb={2} c="dark">
             {title}
           </Text>
           <Rating value={rating} size="xs" readOnly />
