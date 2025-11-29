@@ -166,7 +166,7 @@ export function MealEditorModal({
   return (
     <Modal
       opened={opened}
-      onClose={onClose}
+      onClose={handleCancel}
       title={meal ? 'Edit Meal' : 'Create New Meal'}
       size="md"
     >
