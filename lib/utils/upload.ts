@@ -51,3 +51,39 @@ export function validateImageSize(
   const sizeInMB = sizeInBytes / (1024 * 1024);
   return sizeInMB <= maxSizeMB;
 }
+
+/**
+ * Deletes an image file from the uploads directory
+ * @param imageUrl - The URL path to the image (e.g., "/uploads/meal-123.jpg")
+ * @returns Promise<boolean> - true if deleted successfully, false otherwise
+ */
+export async function deleteImageFile(imageUrl: string): Promise<boolean> {
+  try {
+    const fs = await import('fs/promises');
+    const path = await import('path');
+
+    // Extract filename from URL (e.g., "/uploads/meal-123.jpg" → "meal-123.jpg")
+    const filename = imageUrl.split('/').pop();
+    if (!filename) {
+      console.warn('Invalid imageUrl format:', imageUrl);
+      return false;
+    }
+
+    const filepath = path.join(process.cwd(), 'public', 'uploads', filename);
+
+    // Check if file exists before deleting
+    try {
+      await fs.access(filepath);
+      await fs.unlink(filepath);
+      console.log(`Deleted image file: ${filepath}`);
+      return true;
+    } catch {
+      // File doesn't exist, that's okay
+      console.log(`Image file not found (may already be deleted): ${filepath}`);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error deleting image file:', error);
+    return false;
+  }
+}

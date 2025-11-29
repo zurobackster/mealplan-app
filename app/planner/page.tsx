@@ -304,6 +304,7 @@ export default function PlannerPage() {
 
   const handleMealSaved = () => {
     setMealListKey((prev) => prev + 1);
+    refreshWeeklyPlan(selectedDate);
   };
 
   const handleOpenImageCropper = (callback: (url: string) => void) => {

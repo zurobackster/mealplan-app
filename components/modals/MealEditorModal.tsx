@@ -56,6 +56,10 @@ export function MealEditorModal({
   const [recipeText, setRecipeText] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Track images for cleanup on cancel
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [newlyUploadedImageUrl, setNewlyUploadedImageUrl] = useState<string | null>(null);
+
   // Fetch categories
   useEffect(() => {
     if (opened) {
@@ -74,6 +78,8 @@ export function MealEditorModal({
       setRating(meal.rating);
       setImageUrl(meal.imageUrl);
       setRecipeText(meal.recipeText || '');
+      setOriginalImageUrl(meal.imageUrl);
+      setNewlyUploadedImageUrl(null);
     } else if (opened) {
       // Reset form for new meal
       setTitle('');
@@ -81,6 +87,8 @@ export function MealEditorModal({
       setRating(0);
       setImageUrl(null);
       setRecipeText('');
+      setOriginalImageUrl(null);
+      setNewlyUploadedImageUrl(null);
     }
   }, [opened, meal]);
 
@@ -137,7 +145,22 @@ export function MealEditorModal({
   const handleImageClick = () => {
     onOpenImageCropper((newImageUrl) => {
       setImageUrl(newImageUrl);
+      setNewlyUploadedImageUrl(newImageUrl);
     });
+  };
+
+  const handleCancel = async () => {
+    // Cleanup newly uploaded image if user didn't save
+    if (newlyUploadedImageUrl && newlyUploadedImageUrl !== originalImageUrl) {
+      try {
+        await fetch(`/api/upload?path=${encodeURIComponent(newlyUploadedImageUrl)}`, {
+          method: 'DELETE',
+        });
+      } catch (error) {
+        console.error('Failed to cleanup image:', error);
+      }
+    }
+    onClose();
   };
 
   return (
@@ -209,7 +232,7 @@ export function MealEditorModal({
         />
 
         <Group justify="flex-end" mt="md">
-          <Button variant="subtle" onClick={onClose}>
+          <Button variant="subtle" onClick={handleCancel}>
             Cancel
           </Button>
           <Button onClick={handleSave} loading={loading}>

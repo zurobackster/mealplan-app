@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db/prisma';
 import { sessionOptions } from '@/lib/auth/session';
 import { SessionData } from '@/lib/auth/types';
+import { deleteImageFile } from '@/lib/utils/upload';
 
 // PATCH update meal
 export async function PATCH(
@@ -30,6 +31,18 @@ export async function PATCH(
     const body = await request.json();
     const { title, categoryId, rating, imageUrl, recipeText } = body;
 
+    // First, fetch current meal to get old imageUrl
+    const currentMeal = await prisma.meal.findUnique({
+      where: { id: mealId },
+    });
+
+    if (!currentMeal) {
+      return NextResponse.json(
+        { error: 'Meal not found' },
+        { status: 404 }
+      );
+    }
+
     const meal = await prisma.meal.update({
       where: { id: mealId },
       data: {
@@ -43,6 +56,15 @@ export async function PATCH(
         category: true,
       },
     });
+
+    // If imageUrl changed, delete old image
+    if (
+      imageUrl !== undefined &&
+      currentMeal.imageUrl &&
+      currentMeal.imageUrl !== imageUrl
+    ) {
+      await deleteImageFile(currentMeal.imageUrl);
+    }
 
     return NextResponse.json(meal);
   } catch (error: any) {
@@ -84,6 +106,18 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid meal ID' }, { status: 400 });
     }
 
+    // First, fetch the meal to get imageUrl
+    const meal = await prisma.meal.findUnique({
+      where: { id: mealId },
+    });
+
+    if (!meal) {
+      return NextResponse.json(
+        { error: 'Meal not found' },
+        { status: 404 }
+      );
+    }
+
     // Delete all planned meals first (manual cascade)
     await prisma.plannedMeal.deleteMany({
       where: { mealId },
@@ -93,6 +127,11 @@ export async function DELETE(
     await prisma.meal.delete({
       where: { id: mealId },
     });
+
+    // Delete image file if it exists
+    if (meal.imageUrl) {
+      await deleteImageFile(meal.imageUrl);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

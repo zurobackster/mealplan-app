@@ -9,6 +9,7 @@ import {
   saveBase64Image,
   generateFilename,
   validateImageSize,
+  deleteImageFile,
 } from '@/lib/utils/upload';
 
 // POST upload image
@@ -63,6 +64,44 @@ export async function POST(request: NextRequest) {
     console.error('Upload error:', error);
     return NextResponse.json(
       { error: 'Failed to upload image' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE image
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getIronSession<SessionData>(
+      await cookies(),
+      sessionOptions
+    );
+
+    if (!session.isLoggedIn) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const imagePath = searchParams.get('path');
+
+    if (!imagePath) {
+      return NextResponse.json(
+        { error: 'Image path is required' },
+        { status: 400 }
+      );
+    }
+
+    const deleted = await deleteImageFile(imagePath);
+
+    if (deleted) {
+      return NextResponse.json({ message: 'Image deleted successfully' });
+    } else {
+      return NextResponse.json({ message: 'Image not found or already deleted' });
+    }
+  } catch (error) {
+    console.error('Delete image error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete image' },
       { status: 500 }
     );
   }
