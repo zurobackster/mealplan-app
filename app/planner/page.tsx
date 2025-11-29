@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Text, Group, Box, Paper, Card } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
   DndContext,
   DragOverlay,
-  closestCenter,
+  rectIntersection,
   PointerSensor,
   useSensor,
   useSensors,
@@ -69,10 +69,15 @@ export default function PlannerPage() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [activeMeal, setActiveMeal] = useState<any | null>(null);
 
+
   // Weekly planner state
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan | null>(null);
   const [plannerLoading, setPlannerLoading] = useState(true);
+
+  // Scroll preservation refs
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
+  const scrollPositionRef = useRef({ x: 0, y: 0 });
 
   // DnD sensors
   const sensors = useSensors(
@@ -123,6 +128,14 @@ export default function PlannerPage() {
     fetchWeeklyPlan(selectedDate);
   }, [selectedDate]);
 
+  // Restore scroll position after weeklyPlan updates
+  useEffect(() => {
+    if (scrollViewportRef.current && scrollPositionRef.current) {
+      scrollViewportRef.current.scrollLeft = scrollPositionRef.current.x;
+      scrollViewportRef.current.scrollTop = scrollPositionRef.current.y;
+    }
+  }, [weeklyPlan]);
+
   // Drag handlers
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -143,6 +156,14 @@ export default function PlannerPage() {
     if (typeof overId === 'string' && overId.includes('-')) {
       const [dayOfWeek, slot] = overId.split('-');
       const mealId = active.id as number;
+
+      // Save scroll position before API call
+      if (scrollViewportRef.current) {
+        scrollPositionRef.current = {
+          x: scrollViewportRef.current.scrollLeft,
+          y: scrollViewportRef.current.scrollTop,
+        };
+      }
 
       // Determine if this is from catalog or within planner
       const isFromCatalog = active.data.current?.type === 'catalog-meal';
@@ -295,7 +316,7 @@ export default function PlannerPage() {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={rectIntersection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
@@ -348,6 +369,7 @@ export default function PlannerPage() {
               weeklyPlan={weeklyPlan}
               loading={plannerLoading}
               onRemoveMeal={handleRemoveMeal}
+              scrollViewportRef={scrollViewportRef}
             />
           </Box>
         </Box>

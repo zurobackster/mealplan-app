@@ -29,6 +29,7 @@ interface WeekPlannerProps {
   weeklyPlan: WeeklyPlan | null;
   loading: boolean;
   onRemoveMeal: (plannedMealId: number) => void;
+  scrollViewportRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export function WeekPlanner({
@@ -37,6 +38,7 @@ export function WeekPlanner({
   weeklyPlan,
   loading,
   onRemoveMeal,
+  scrollViewportRef,
 }: WeekPlannerProps) {
 
   if (loading) {
@@ -60,7 +62,7 @@ export function WeekPlanner({
       <WeekSelector selectedDate={selectedDate} onDateChange={onDateChange} />
 
       {/* Horizontal ScrollArea for day columns */}
-      <ScrollArea style={{ flex: 1 }} type="auto" offsetScrollbars scrollbarSize={10}>
+      <ScrollArea viewportRef={scrollViewportRef} style={{ flex: 1 }} type="auto" offsetScrollbars scrollbarSize={10}>
         <Flex direction="row" wrap="nowrap" gap="md" style={{ height: '100%', minWidth: 'min-content' }}>
           {[1, 2, 3, 4, 5, 6, 7].map((dayOfWeek) => (
             <DayColumn
