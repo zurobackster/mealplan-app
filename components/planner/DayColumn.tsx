@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { Paper, Text, Stack } from '@mantine/core';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { SlotDropZone } from './SlotDropZone';
-import { getDayName } from '@/lib/utils/date';
+import { formatDayHeader } from '@/lib/utils/date';
 
 interface PlannedMeal {
   id: number;
@@ -13,6 +13,7 @@ interface PlannedMeal {
   meal: {
     id: number;
     title: string;
+    rating: number;
     imageUrl: string | null;
     category?: {
       color: string | null;
@@ -22,14 +23,15 @@ interface PlannedMeal {
 
 interface DayColumnProps {
   dayOfWeek: number;
+  monday: Date;
   meals: PlannedMeal[];
   onRemoveMeal: (plannedMealId: number) => void;
 }
 
 const SLOTS = ['BREAKFAST', 'LUNCH', 'DINNER', 'OTHER'];
 
-export function DayColumn({ dayOfWeek, meals, onRemoveMeal }: DayColumnProps) {
-  const dayName = getDayName(dayOfWeek);
+export function DayColumn({ dayOfWeek, monday, meals, onRemoveMeal }: DayColumnProps) {
+  const dayHeader = formatDayHeader(monday, dayOfWeek);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll for vertical scrolling within day
@@ -79,7 +81,7 @@ export function DayColumn({ dayOfWeek, meals, onRemoveMeal }: DayColumnProps) {
           boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
         }}
       >
-        {dayName}
+        {dayHeader}
       </Text>
 
       {/* Scrollable Meal Slots - Native CSS overflow */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, Image, Text, Group, ActionIcon } from '@mantine/core';
+import { Card, Image, Text, Group, ActionIcon, Rating } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
@@ -13,6 +13,7 @@ interface PlannedMealCardProps {
   id: number;
   title: string;
   imageUrl: string | null;
+  rating: number;
   categoryColor?: string | null;
   dayOfWeek: number;
   slot: string;
@@ -23,6 +24,7 @@ export function PlannedMealCard({
   id,
   title,
   imageUrl,
+  rating,
   categoryColor,
   dayOfWeek,
   slot,
@@ -92,7 +94,7 @@ export function PlannedMealCard({
         transition: 'all 0.2s ease',
       }}
     >
-      <Group gap="xs" wrap="nowrap">
+      <Group gap="xs" wrap="nowrap" align="flex-start">
         <Image
           src={imageUrl || '/uploads/placeholder.jpg'}
           alt={title}
@@ -104,9 +106,12 @@ export function PlannedMealCard({
           draggable={false}
           style={{ flexShrink: 0 }}
         />
-        <Text size="sm" fw={500} style={{ flex: 1 }} lineClamp={2}>
-          {title}
-        </Text>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Text size="sm" fw={500} lineClamp={1} mb={2}>
+            {title}
+          </Text>
+          <Rating value={rating} size="xs" readOnly />
+        </div>
         <ActionIcon
           size="sm"
           variant="subtle"

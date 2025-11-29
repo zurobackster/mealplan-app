@@ -78,3 +78,15 @@ export function getShortDayName(dayOfWeek: number): string {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   return days[dayOfWeek - 1] || '';
 }
+
+/**
+ * Format day header with date (e.g., "Wed, Nov 26")
+ * @param monday - Monday of the week
+ * @param dayOfWeek - Day number (1-7, Monday = 1)
+ * @returns Formatted day header
+ */
+export function formatDayHeader(monday: Date | string, dayOfWeek: number): string {
+  const start = dayjs(monday);
+  const targetDate = start.add(dayOfWeek - 1, 'days');
+  return targetDate.format('ddd, MMM D');
+}

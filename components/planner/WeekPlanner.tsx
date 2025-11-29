@@ -5,6 +5,7 @@ import { Stack, Loader, Center, Text, Flex } from '@mantine/core';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { WeekSelector } from './WeekSelector';
 import { DayColumn } from './DayColumn';
+import { getMonday } from '@/lib/utils/date';
 
 interface WeeklyPlan {
   id: number;
@@ -69,6 +70,8 @@ export function WeekPlanner({
     );
   }
 
+  const monday = getMonday(selectedDate);
+
   return (
     <Stack gap="md" style={{ height: '100%', overflow: 'hidden' }}>
       <WeekSelector selectedDate={selectedDate} onDateChange={onDateChange} />
@@ -87,6 +90,7 @@ export function WeekPlanner({
             <DayColumn
               key={dayOfWeek}
               dayOfWeek={dayOfWeek}
+              monday={monday}
               meals={weeklyPlan.plannedMeals.filter((m) => m.dayOfWeek === dayOfWeek)}
               onRemoveMeal={onRemoveMeal}
             />

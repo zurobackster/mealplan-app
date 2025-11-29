@@ -83,7 +83,7 @@ export default function PlannerPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  // Fetch weekly plan
+  // Fetch weekly plan (with loading indicator)
   const fetchWeeklyPlan = async (date: Date) => {
     try {
       setPlannerLoading(true);
@@ -104,6 +104,22 @@ export default function PlannerPage() {
       });
     } finally {
       setPlannerLoading(false);
+    }
+  };
+
+  // Refresh weekly plan in background (no loading indicator - for SPA behavior)
+  const refreshWeeklyPlan = async (date: Date) => {
+    try {
+      const monday = getMonday(date);
+      const weekStartDate = formatISODate(monday);
+
+      const response = await fetch(`/api/weekly-plans?weekStartDate=${weekStartDate}`);
+      if (response.ok) {
+        const data = await response.json();
+        setWeeklyPlan(data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh weekly plan:', error);
     }
   };
 
@@ -164,7 +180,7 @@ export default function PlannerPage() {
             });
 
             if (response.ok) {
-              fetchWeeklyPlan(selectedDate);
+              refreshWeeklyPlan(selectedDate);
               notifications.show({
                 title: 'Added',
                 message: 'Meal added to plan',
@@ -220,7 +236,7 @@ export default function PlannerPage() {
             });
 
             if (response.ok) {
-              fetchWeeklyPlan(selectedDate);
+              refreshWeeklyPlan(selectedDate);
               notifications.show({
                 title: 'Moved',
                 message: 'Meal moved successfully',
@@ -246,7 +262,7 @@ export default function PlannerPage() {
       });
 
       if (response.ok) {
-        fetchWeeklyPlan(selectedDate);
+        refreshWeeklyPlan(selectedDate);
         notifications.show({
           title: 'Removed',
           message: 'Meal removed from plan',

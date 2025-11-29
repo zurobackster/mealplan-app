@@ -11,6 +11,7 @@ interface PlannedMeal {
   meal: {
     id: number;
     title: string;
+    rating: number;
     imageUrl: string | null;
     category?: {
       color: string | null;
@@ -99,6 +100,7 @@ export function SlotDropZone({
               key={plannedMeal.id}
               id={plannedMeal.id}
               title={plannedMeal.meal.title}
+              rating={plannedMeal.meal.rating}
               imageUrl={plannedMeal.meal.imageUrl}
               categoryColor={plannedMeal.meal.category?.color}
               dayOfWeek={dayOfWeek}
