@@ -2,14 +2,20 @@
 
 import { Card, Image, Text, Group, ActionIcon } from '@mantine/core';
 import { IconX } from '@tabler/icons-react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { attachClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { useEffect, useRef, useState } from 'react';
+import invariant from 'tiny-invariant';
 
 interface PlannedMealCardProps {
   id: number;
   title: string;
   imageUrl: string | null;
   categoryColor?: string | null;
+  dayOfWeek: number;
+  slot: string;
   onRemove: () => void;
 }
 
@@ -18,29 +24,55 @@ export function PlannedMealCard({
   title,
   imageUrl,
   categoryColor,
+  dayOfWeek,
+  slot,
   onRemove,
 }: PlannedMealCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isDraggedOver, setIsDraggedOver] = useState(false);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    invariant(el);
+
+    return combine(
+      // Make it draggable
+      draggable({
+        element: el,
+        getInitialData: () => ({
+          type: 'planned-meal',
+          id,
+          dayOfWeek,
+          slot,
+        }),
+        onDragStart: () => setIsDragging(true),
+        onDrop: () => setIsDragging(false),
+      }),
+      // Make it a drop target for reordering
+      dropTargetForElements({
+        element: el,
+        getData: ({ input, element }) => {
+          return attachClosestEdge(
+            { type: 'planned-meal', id, dayOfWeek, slot },
+            { input, element, allowedEdges: ['top', 'bottom'] }
+          );
+        },
+        onDragEnter: () => setIsDraggedOver(true),
+        onDragLeave: () => setIsDraggedOver(false),
+        onDrop: () => setIsDraggedOver(false),
+      })
+    );
+  }, [id, dayOfWeek, slot]);
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
     opacity: isDragging ? 0.5 : 1,
   };
 
   return (
     <Card
-      ref={setNodeRef}
+      ref={cardRef}
       style={style}
-      {...attributes}
-      {...listeners}
       shadow="xs"
       padding="xs"
       radius="md"
@@ -69,6 +101,7 @@ export function PlannedMealCard({
           radius="sm"
           fit="cover"
           fallbackSrc="https://placehold.co/40x40/e0e0e0/666666?text=M"
+          draggable={false}
           style={{ flexShrink: 0 }}
         />
         <Text size="sm" fw={500} style={{ flex: 1 }} lineClamp={2}>

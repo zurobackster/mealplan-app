@@ -1,8 +1,9 @@
 'use client';
 
 import { Stack, Text, Paper } from '@mantine/core';
-import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useEffect, useRef, useState } from 'react';
+import invariant from 'tiny-invariant';
 import { PlannedMealCard } from './PlannedMealCard';
 
 interface PlannedMeal {
@@ -30,8 +31,21 @@ export function SlotDropZone({
   meals,
   onRemoveMeal,
 }: SlotDropZoneProps) {
-  const dropId = `${dayOfWeek}-${slot}`;
-  const { setNodeRef, isOver } = useDroppable({ id: dropId });
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+  const [isOver, setIsOver] = useState(false);
+
+  useEffect(() => {
+    const el = dropZoneRef.current;
+    invariant(el);
+
+    return dropTargetForElements({
+      element: el,
+      getData: () => ({ dayOfWeek, slot }),
+      onDragEnter: () => setIsOver(true),
+      onDragLeave: () => setIsOver(false),
+      onDrop: () => setIsOver(false),
+    });
+  }, [dayOfWeek, slot]);
 
   const slotLabels: Record<string, string> = {
     BREAKFAST: 'Breakfast',
@@ -42,7 +56,7 @@ export function SlotDropZone({
 
   return (
     <Paper
-      ref={setNodeRef}
+      ref={dropZoneRef}
       p="sm"
       withBorder
       style={{
@@ -74,26 +88,26 @@ export function SlotDropZone({
         {slotLabels[slot] || slot}
       </Text>
 
-      <SortableContext items={meals.map((m) => m.id)} strategy={verticalListSortingStrategy}>
-        <Stack gap="xs">
-          {meals.length === 0 ? (
-            <Text size="xs" c="dimmed" ta="center" py="sm">
-              Drop meal here
-            </Text>
-          ) : (
-            meals.map((plannedMeal) => (
-              <PlannedMealCard
-                key={plannedMeal.id}
-                id={plannedMeal.id}
-                title={plannedMeal.meal.title}
-                imageUrl={plannedMeal.meal.imageUrl}
-                categoryColor={plannedMeal.meal.category?.color}
-                onRemove={() => onRemoveMeal(plannedMeal.id)}
-              />
-            ))
-          )}
-        </Stack>
-      </SortableContext>
+      <Stack gap="xs">
+        {meals.length === 0 ? (
+          <Text size="xs" c="dimmed" ta="center" py="sm">
+            Drop meal here
+          </Text>
+        ) : (
+          meals.map((plannedMeal) => (
+            <PlannedMealCard
+              key={plannedMeal.id}
+              id={plannedMeal.id}
+              title={plannedMeal.meal.title}
+              imageUrl={plannedMeal.meal.imageUrl}
+              categoryColor={plannedMeal.meal.category?.color}
+              dayOfWeek={dayOfWeek}
+              slot={slot}
+              onRemove={() => onRemoveMeal(plannedMeal.id)}
+            />
+          ))
+        )}
+      </Stack>
     </Paper>
   );
 }

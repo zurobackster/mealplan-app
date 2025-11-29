@@ -2,18 +2,10 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Text, Group, Box, Paper, Card } from '@mantine/core';
+import { Button, Text, Group, Box, Paper } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import {
-  DndContext,
-  DragOverlay,
-  rectIntersection,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragStartEvent,
-  DragEndEvent,
-} from '@dnd-kit/core';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { MealListPanel } from '@/components/meals/MealListPanel';
 import { CategoryManagerModal } from '@/components/modals/CategoryManagerModal';
 import { MealEditorModal } from '@/components/modals/MealEditorModal';
@@ -79,15 +71,6 @@ export default function PlannerPage() {
   const scrollViewportRef = useRef<HTMLDivElement>(null);
   const scrollPositionRef = useRef({ x: 0, y: 0 });
 
-  // DnD sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
-
   useEffect(() => {
     fetch('/api/auth/session')
       .then((res) => res.json())
@@ -136,113 +119,125 @@ export default function PlannerPage() {
     }
   }, [weeklyPlan]);
 
-  // Drag handlers
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    setActiveId(active.id as number);
-    setActiveMeal(active.data.current);
-  };
+  // Pragmatic Drag and Drop monitor
+  useEffect(() => {
+    return monitorForElements({
+      onDragStart: ({ source }) => {
+        setActiveId(source.data.id as number);
+        setActiveMeal(source.data);
+      },
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
-    setActiveMeal(null);
+      onDrop: async ({ source, location }) => {
+        setActiveId(null);
+        setActiveMeal(null);
 
-    if (!over || !weeklyPlan) return;
+        const target = location.current.dropTargets[0];
+        if (!target || !weeklyPlan) return;
 
-    const overId = over.id as string;
+        const sourceData = source.data;
+        const targetData = target.data;
 
-    // Check if dropping on planner slot (format: "dayOfWeek-slot")
-    if (typeof overId === 'string' && overId.includes('-')) {
-      const [dayOfWeek, slot] = overId.split('-');
-      const mealId = active.id as number;
+        // Save scroll position before API call
+        if (scrollViewportRef.current) {
+          scrollPositionRef.current = {
+            x: scrollViewportRef.current.scrollLeft,
+            y: scrollViewportRef.current.scrollTop,
+          };
+        }
 
-      // Save scroll position before API call
-      if (scrollViewportRef.current) {
-        scrollPositionRef.current = {
-          x: scrollViewportRef.current.scrollLeft,
-          y: scrollViewportRef.current.scrollTop,
-        };
-      }
+        // Case 1: Dropping catalog meal onto slot
+        if (sourceData.type === 'catalog-meal' && targetData.dayOfWeek) {
+          const mealId = sourceData.id as number;
+          const { dayOfWeek, slot } = targetData;
 
-      // Determine if this is from catalog or within planner
-      const isFromCatalog = active.data.current?.type === 'catalog-meal';
+          try {
+            const response = await fetch('/api/planned-meals', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                weeklyPlanId: weeklyPlan.id,
+                mealId,
+                dayOfWeek,
+                slot,
+                position: 0,
+              }),
+            });
 
-      if (isFromCatalog) {
-        // Add meal to planner via POST /api/planned-meals
-        try {
-          const monday = getMonday(selectedDate);
-          const weekStartDate = formatISODate(monday);
-
-          // Get weekly plan (it should exist from fetch, but ensure it)
-          const response = await fetch('/api/planned-meals', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              weeklyPlanId: weeklyPlan.id,
-              mealId,
-              dayOfWeek: parseInt(dayOfWeek),
-              slot,
-              position: 0,
-            }),
-          });
-
-          if (response.ok) {
-            fetchWeeklyPlan(selectedDate);
+            if (response.ok) {
+              fetchWeeklyPlan(selectedDate);
+              notifications.show({
+                title: 'Added',
+                message: 'Meal added to plan',
+                color: 'green',
+              });
+            }
+          } catch (error) {
             notifications.show({
-              title: 'Added',
-              message: 'Meal added to plan',
-              color: 'green',
+              title: 'Error',
+              message: 'Failed to add meal',
+              color: 'red',
             });
           }
-        } catch (error) {
-          notifications.show({
-            title: 'Error',
-            message: 'Failed to add meal',
-            color: 'red',
-          });
-        }
-      } else {
-        // Move existing planned meal
-        const plannedMeal = weeklyPlan.plannedMeals.find((m) => m.id === mealId);
-        if (!plannedMeal) return;
-
-        // Check if it's the same slot
-        if (
-          plannedMeal.dayOfWeek === parseInt(dayOfWeek) &&
-          plannedMeal.slot === slot
-        ) {
-          return; // No change
         }
 
-        try {
-          const response = await fetch(`/api/planned-meals/${mealId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              dayOfWeek: parseInt(dayOfWeek),
-              slot,
-            }),
-          });
+        // Case 2: Moving planned meal between slots or reordering
+        else if (sourceData.type === 'planned-meal') {
+          const plannedMealId = sourceData.id as number;
 
-          if (response.ok) {
-            fetchWeeklyPlan(selectedDate);
+          // Determine target position
+          let targetDayOfWeek, targetSlot;
+
+          if (targetData.type === 'planned-meal') {
+            // Dropped on another planned meal (reordering)
+            targetDayOfWeek = targetData.dayOfWeek;
+            targetSlot = targetData.slot;
+
+            // Use closest edge for positioning (future enhancement)
+            const edge = extractClosestEdge(targetData);
+            // Position based on edge (top or bottom) - for now, just move to that slot
+          } else {
+            // Dropped on empty slot
+            targetDayOfWeek = targetData.dayOfWeek;
+            targetSlot = targetData.slot;
+          }
+
+          // Check if it's the same slot
+          if (
+            sourceData.dayOfWeek === targetDayOfWeek &&
+            sourceData.slot === targetSlot
+          ) {
+            return; // No change
+          }
+
+          try {
+            const response = await fetch(`/api/planned-meals/${plannedMealId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                dayOfWeek: targetDayOfWeek,
+                slot: targetSlot,
+              }),
+            });
+
+            if (response.ok) {
+              fetchWeeklyPlan(selectedDate);
+              notifications.show({
+                title: 'Moved',
+                message: 'Meal moved successfully',
+                color: 'green',
+              });
+            }
+          } catch (error) {
             notifications.show({
-              title: 'Moved',
-              message: 'Meal moved successfully',
-              color: 'green',
+              title: 'Error',
+              message: 'Failed to move meal',
+              color: 'red',
             });
           }
-        } catch (error) {
-          notifications.show({
-            title: 'Error',
-            message: 'Failed to move meal',
-            color: 'red',
-          });
         }
-      }
-    }
-  };
+      },
+    });
+  }, [weeklyPlan, selectedDate]);
 
   const handleRemoveMeal = async (plannedMealId: number) => {
     try {
@@ -314,13 +309,7 @@ export default function PlannerPage() {
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={rectIntersection}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <Paper p="md" shadow="sm">
           <Group justify="space-between">
@@ -395,17 +384,5 @@ export default function PlannerPage() {
         onImageCropped={handleImageCropped}
       />
     </Box>
-
-      {/* Drag Overlay */}
-      <DragOverlay>
-        {activeMeal ? (
-          <Card shadow="lg" p="sm" style={{ opacity: 0.9, cursor: 'grabbing' }}>
-            <Text size="sm" fw={500}>
-              {activeMeal.title || 'Moving meal...'}
-            </Text>
-          </Card>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
   );
 }

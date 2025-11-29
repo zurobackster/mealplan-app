@@ -1,6 +1,8 @@
 'use client';
 
-import { Stack, Loader, Center, Text, ScrollArea, Flex } from '@mantine/core';
+import { useEffect } from 'react';
+import { Stack, Loader, Center, Text, Flex } from '@mantine/core';
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { WeekSelector } from './WeekSelector';
 import { DayColumn } from './DayColumn';
 
@@ -41,6 +43,16 @@ export function WeekPlanner({
   scrollViewportRef,
 }: WeekPlannerProps) {
 
+  // Auto-scroll for horizontal scrolling
+  useEffect(() => {
+    const scrollContainer = scrollViewportRef?.current;
+    if (!scrollContainer) return;
+
+    return autoScrollForElements({
+      element: scrollContainer,
+    });
+  }, [scrollViewportRef]);
+
   if (loading) {
     return (
       <Center h={400}>
@@ -61,8 +73,15 @@ export function WeekPlanner({
     <Stack gap="md" style={{ height: '100%', overflow: 'hidden' }}>
       <WeekSelector selectedDate={selectedDate} onDateChange={onDateChange} />
 
-      {/* Horizontal ScrollArea for day columns */}
-      <ScrollArea viewportRef={scrollViewportRef} style={{ flex: 1 }} type="auto" offsetScrollbars scrollbarSize={10}>
+      {/* Horizontal scroll with native CSS overflow */}
+      <div
+        ref={scrollViewportRef}
+        style={{
+          flex: 1,
+          overflowX: 'auto',
+          overflowY: 'hidden',
+        }}
+      >
         <Flex direction="row" wrap="nowrap" gap="md" style={{ height: '100%', minWidth: 'min-content' }}>
           {[1, 2, 3, 4, 5, 6, 7].map((dayOfWeek) => (
             <DayColumn
@@ -73,7 +92,7 @@ export function WeekPlanner({
             />
           ))}
         </Flex>
-      </ScrollArea>
+      </div>
     </Stack>
   );
 }

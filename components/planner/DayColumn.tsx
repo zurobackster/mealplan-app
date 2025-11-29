@@ -1,6 +1,8 @@
 'use client';
 
-import { Paper, Text, Stack, ScrollArea } from '@mantine/core';
+import { useEffect, useRef } from 'react';
+import { Paper, Text, Stack } from '@mantine/core';
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { SlotDropZone } from './SlotDropZone';
 import { getDayName } from '@/lib/utils/date';
 
@@ -28,6 +30,17 @@ const SLOTS = ['BREAKFAST', 'LUNCH', 'DINNER', 'OTHER'];
 
 export function DayColumn({ dayOfWeek, meals, onRemoveMeal }: DayColumnProps) {
   const dayName = getDayName(dayOfWeek);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll for vertical scrolling within day
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    return autoScrollForElements({
+      element: scrollContainer,
+    });
+  }, []);
 
   const getMealsForSlot = (slot: string) => {
     return meals
@@ -69,9 +82,9 @@ export function DayColumn({ dayOfWeek, meals, onRemoveMeal }: DayColumnProps) {
         {dayName}
       </Text>
 
-      {/* Scrollable Meal Slots */}
-      <ScrollArea style={{ flex: 1 }} type="auto" offsetScrollbars scrollbarSize={8}>
-        <Stack gap="md" pr="xs">
+      {/* Scrollable Meal Slots - Native CSS overflow */}
+      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
+        <Stack gap="md">
           {SLOTS.map((slot) => (
             <SlotDropZone
               key={slot}
@@ -82,7 +95,7 @@ export function DayColumn({ dayOfWeek, meals, onRemoveMeal }: DayColumnProps) {
             />
           ))}
         </Stack>
-      </ScrollArea>
+      </div>
     </Paper>
   );
 }

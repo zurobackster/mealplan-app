@@ -2,7 +2,9 @@
 
 import { Card, Image, Text, Badge, Group, Stack, Rating } from '@mantine/core';
 import { IconStar } from '@tabler/icons-react';
-import { useDraggable } from '@dnd-kit/core';
+import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useEffect, useRef, useState } from 'react';
+import invariant from 'tiny-invariant';
 
 interface MealCardProps {
   id: number;
@@ -23,33 +25,47 @@ export function MealCard({
   categoryColor,
   onClick,
 }: MealCardProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id,
-    data: { type: 'catalog-meal', id, title, imageUrl, rating, categoryName, categoryColor },
-  });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        opacity: isDragging ? 0.5 : 1,
-      }
-    : undefined;
+  useEffect(() => {
+    const el = cardRef.current;
+    invariant(el);
+
+    return draggable({
+      element: el,
+      getInitialData: () => ({
+        type: 'catalog-meal',
+        id,
+        title,
+        imageUrl,
+        rating,
+        categoryName,
+        categoryColor,
+      }),
+      onDragStart: () => setIsDragging(true),
+      onDrop: () => setIsDragging(false),
+    });
+  }, [id, title, imageUrl, rating, categoryName, categoryColor]);
+
+  const style = {
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={cardRef} style={style} onClick={onClick}>
       <Card
       shadow="sm"
       padding="0"
       radius="md"
       withBorder
       style={{
-        cursor: 'pointer',
+        cursor: 'grab',
         transition: 'transform 0.2s, box-shadow 0.2s',
         aspectRatio: '1',
         display: 'flex',
         flexDirection: 'column',
       }}
-      onClick={onClick}
       sx={{
         '&:hover': {
           transform: 'translateY(-4px)',
@@ -65,6 +81,7 @@ export function MealCard({
           height="100%"
           fit="cover"
           fallbackSrc="https://placehold.co/400x400/e0e0e0/666666?text=No+Image"
+          draggable={false}
         />
         {categoryName && (
           <Badge
