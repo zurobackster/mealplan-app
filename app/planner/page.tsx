@@ -356,6 +356,7 @@ export default function PlannerPage() {
               onEditMeal={handleOpenMealEditor}
               onCreateMeal={() => handleOpenMealEditor()}
               onManageCategories={() => setCategoryModalOpened(true)}
+              onMealDeleted={handleMealSaved}
             />
           </Box>
 

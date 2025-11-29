@@ -43,12 +43,14 @@ interface MealListPanelProps {
   onEditMeal?: (meal: Meal) => void;
   onCreateMeal?: () => void;
   onManageCategories?: () => void;
+  onMealDeleted?: () => void;
 }
 
 export function MealListPanel({
   onEditMeal,
   onCreateMeal,
   onManageCategories,
+  onMealDeleted,
 }: MealListPanelProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [meals, setMeals] = useState<Meal[]>([]);
@@ -117,6 +119,7 @@ export function MealListPanel({
           color: 'green',
         });
         fetchMeals();
+        onMealDeleted?.();
       } else {
         throw new Error('Failed to delete meal');
       }
