@@ -14,6 +14,7 @@ import {
 } from '@mantine/core';
 import { IconPlus, IconEdit, IconTrash, IconCheck, IconX } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface Category {
   id: number;
@@ -38,6 +39,9 @@ export function CategoryManagerModal({
   const [newCategoryColor, setNewCategoryColor] = useState('#9c27b0');
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
+  const [deleteConfirmOpened, setDeleteConfirmOpened] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -115,10 +119,19 @@ export function CategoryManagerModal({
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this category? Meals will become uncategorized.')) return;
+    setCategoryToDelete(id);
+    setDeleteConfirmOpened(true);
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+
+    setDeleting(true);
 
     try {
-      const response = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/categories/${categoryToDelete}`, {
+        method: 'DELETE',
+      });
 
       if (response.ok) {
         notifications.show({
@@ -126,6 +139,8 @@ export function CategoryManagerModal({
           message: 'Category deleted',
           color: 'green',
         });
+        setDeleteConfirmOpened(false);
+        setCategoryToDelete(null);
         fetchCategories();
         onCategoriesUpdated();
       }
@@ -135,7 +150,14 @@ export function CategoryManagerModal({
         message: 'Failed to delete category',
         color: 'red',
       });
+    } finally {
+      setDeleting(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmOpened(false);
+    setCategoryToDelete(null);
   };
 
   const startEdit = (category: Category) => {
@@ -228,6 +250,19 @@ export function CategoryManagerModal({
           ))}
         </Stack>
       </Stack>
+
+      <ConfirmationModal
+        opened={deleteConfirmOpened}
+        onClose={handleCancelDelete}
+        onConfirm={confirmDeleteCategory}
+        title="Delete Category?"
+        message="Meals in this category will become uncategorized. This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        confirmColor="red"
+        icon={<IconTrash size={32} stroke={1.5} />}
+        loading={deleting}
+      />
     </Modal>
   );
 }

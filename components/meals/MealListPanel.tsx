@@ -11,11 +11,12 @@ import {
   Center,
   Paper,
 } from '@mantine/core';
-import { IconPlus, IconSettings } from '@tabler/icons-react';
+import { IconPlus, IconSettings, IconTrash } from '@tabler/icons-react';
 import { CategoryTabs } from './CategoryTabs';
 import { MealSearchBar } from './MealSearchBar';
 import { MealCardFlipWrapper } from './MealCardFlipWrapper';
 import { notifications } from '@mantine/notifications';
+import { ConfirmationModal } from '../modals/ConfirmationModal';
 
 interface Category {
   id: number;
@@ -57,6 +58,9 @@ export function MealListPanel({
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [deleteConfirmOpened, setDeleteConfirmOpened] = useState(false);
+  const [mealToDelete, setMealToDelete] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch categories
   const fetchCategories = async () => {
@@ -103,12 +107,17 @@ export function MealListPanel({
 
   // Handle meal deletion
   const handleDeleteMeal = async (mealId: number) => {
-    if (!confirm('Are you sure you want to delete this meal?')) {
-      return;
-    }
+    setMealToDelete(mealId);
+    setDeleteConfirmOpened(true);
+  };
+
+  const confirmDeleteMeal = async () => {
+    if (!mealToDelete) return;
+
+    setDeleting(true);
 
     try {
-      const response = await fetch(`/api/meals/${mealId}`, {
+      const response = await fetch(`/api/meals/${mealToDelete}`, {
         method: 'DELETE',
       });
 
@@ -118,6 +127,8 @@ export function MealListPanel({
           message: 'Meal deleted successfully',
           color: 'green',
         });
+        setDeleteConfirmOpened(false);
+        setMealToDelete(null);
         fetchMeals();
         onMealDeleted?.();
       } else {
@@ -129,7 +140,14 @@ export function MealListPanel({
         message: 'Failed to delete meal',
         color: 'red',
       });
+    } finally {
+      setDeleting(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmOpened(false);
+    setMealToDelete(null);
   };
 
   // Filter meals by search query
@@ -209,6 +227,19 @@ export function MealListPanel({
           )}
         </div>
       </Stack>
+
+      <ConfirmationModal
+        opened={deleteConfirmOpened}
+        onClose={handleCancelDelete}
+        onConfirm={confirmDeleteMeal}
+        title="Delete Meal?"
+        message="Are you sure you want to delete this meal? This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        confirmColor="red"
+        icon={<IconTrash size={32} stroke={1.5} />}
+        loading={deleting}
+      />
     </Paper>
   );
 }
