@@ -21,7 +21,7 @@ export function ViewOnlyMealCard({
       padding="xs"
       radius="md"
       withBorder
-      sx={{
+      style={{
         borderLeft: categoryColor ? `4px solid ${categoryColor}` : undefined,
         backgroundColor: 'white',
       }}

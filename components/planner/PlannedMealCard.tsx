@@ -69,6 +69,10 @@ export function PlannedMealCard({
 
   const style = {
     opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
+    transition: 'all 0.2s ease',
+    borderLeft: categoryColor ? `4px solid ${categoryColor}` : undefined,
+    backgroundColor: 'white',
   };
 
   return (
@@ -79,20 +83,6 @@ export function PlannedMealCard({
       padding="xs"
       radius="md"
       withBorder
-      sx={{
-        cursor: 'grab',
-        '&:active': {
-          cursor: 'grabbing',
-        },
-        '&:hover': {
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          transform: 'translateY(-1px)',
-          transition: 'all 0.2s ease',
-        },
-        borderLeft: categoryColor ? `4px solid ${categoryColor}` : undefined,
-        backgroundColor: 'white',
-        transition: 'all 0.2s ease',
-      }}
     >
       <Group gap="xs" wrap="nowrap" align="flex-start">
         <div style={{ width: 40, height: 40, flexShrink: 0 }}>
