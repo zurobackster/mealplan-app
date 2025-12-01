@@ -73,15 +73,15 @@ export function PlannedMealCard({
     transition: 'all 0.2s ease',
     borderLeft: categoryColor ? `4px solid ${categoryColor}` : undefined,
     backgroundColor: 'white',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
   };
 
   return (
     <Card
       ref={cardRef}
       style={style}
-      shadow="xs"
       padding="xs"
-      radius="md"
       withBorder
     >
       <Group gap="xs" wrap="nowrap" align="flex-start">
@@ -101,7 +101,15 @@ export function PlannedMealCard({
           <Text size="sm" fw={500} lineClamp={1} mb={2} c="dark">
             {title}
           </Text>
-          <Rating value={rating} size="xs" readOnly />
+          <Rating
+            value={rating}
+            size="sm"
+            readOnly
+            color="yellow"
+            style={{
+              filter: 'drop-shadow(0 1px 2px rgba(251, 192, 45, 0.3))'
+            }}
+          />
         </div>
         <ActionIcon
           size="sm"

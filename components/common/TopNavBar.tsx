@@ -1,0 +1,77 @@
+'use client';
+
+import { usePathname, useRouter } from 'next/navigation';
+import { Group, Button, Text, Paper } from '@mantine/core';
+import { IconChefHat, IconLogout } from '@tabler/icons-react';
+
+export function TopNavBar() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  // Don't show nav bar on login page
+  if (pathname === '/login') {
+    return null;
+  }
+
+  return (
+    <Paper
+      shadow="sm"
+      p="md"
+      style={{
+        borderRadius: 0,
+        borderBottom: '1px solid #e9ecef',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        backgroundColor: 'white',
+      }}
+    >
+      <Group justify="space-between">
+        {/* Logo/App Name */}
+        <Group gap="sm">
+          <IconChefHat size={28} color="#4CAF50" stroke={2} />
+          <Text size="xl" fw={700} c="dark">
+            Meal Planner
+          </Text>
+        </Group>
+
+        {/* Navigation Links */}
+        <Group gap="xs">
+          <Button
+            variant={pathname === '/planner' ? 'filled' : 'subtle'}
+            color="green"
+            onClick={() => router.push('/planner')}
+          >
+            Planner
+          </Button>
+          <Button
+            variant={pathname === '/view-plan' ? 'filled' : 'subtle'}
+            color="green"
+            onClick={() => router.push('/view-plan')}
+          >
+            View Plan
+          </Button>
+        </Group>
+
+        {/* User Actions */}
+        <Button
+          variant="subtle"
+          color="gray"
+          leftSection={<IconLogout size={18} />}
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
+      </Group>
+    </Paper>
+  );
+}

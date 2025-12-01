@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button, Text, Group, Box, Paper } from '@mantine/core';
+import { Box, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractClosestEdge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
@@ -46,8 +45,6 @@ interface PlannedMeal {
 }
 
 export default function PlannerPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<{ username: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Modal states
@@ -77,9 +74,10 @@ export default function PlannerPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.isLoggedIn) {
-          setUser(data.user);
+          setLoading(false);
+        } else {
+          setLoading(false);
         }
-        setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
@@ -279,24 +277,6 @@ export default function PlannerPage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      notifications.show({
-        title: 'Logged Out',
-        message: 'You have been logged out successfully',
-        color: 'blue',
-      });
-      router.push('/login');
-    } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to log out',
-        color: 'red',
-      });
-    }
-  };
-
   const handleOpenMealEditor = (meal?: Meal) => {
     setEditingMeal(meal || null);
     setMealEditorOpened(true);
@@ -328,25 +308,6 @@ export default function PlannerPage() {
 
   return (
     <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Paper p="md" shadow="sm">
-          <Group justify="space-between">
-            <div>
-              <Text size="xl" fw={700}>
-                Meal Planner
-              </Text>
-              {user && (
-                <Text c="dimmed" size="sm">
-                  Welcome, {user.username}
-                </Text>
-              )}
-            </div>
-            <Button onClick={handleLogout} variant="outline" color="red" size="sm">
-              Logout
-            </Button>
-          </Group>
-        </Paper>
-
         {/* Main Content - Split View */}
         <Box style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Left Panel - Meal Catalog (50%) */}

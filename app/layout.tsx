@@ -5,6 +5,7 @@ import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/dates/styles.css";
 import "./globals.css";
+import { TopNavBar } from '@/components/common/TopNavBar';
 
 export const metadata: Metadata = {
   title: "Meal Planner",
@@ -12,8 +13,21 @@ export const metadata: Metadata = {
 };
 
 const theme = createTheme({
-  primaryColor: 'violet',
+  primaryColor: 'green',
   colors: {
+    green: [
+      '#E8F5E9',  // green-0 (lightest)
+      '#C8E6C9',  // green-1
+      '#A5D6A7',  // green-2
+      '#81C784',  // green-3
+      '#66BB6A',  // green-4
+      '#4CAF50',  // green-5 (primary - matches reference)
+      '#43A047',  // green-6
+      '#388E3C',  // green-7
+      '#2E7D32',  // green-8
+      '#1B5E20',  // green-9 (darkest)
+    ],
+    // Keep violet for backward compatibility
     violet: [
       '#f3e5f5',
       '#e1bee7',
@@ -30,6 +44,7 @@ const theme = createTheme({
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   headings: {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    fontWeight: '700',  // Increased from default 600
   },
 });
 
@@ -46,6 +61,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <MantineProvider theme={theme} defaultColorScheme="light">
           <Notifications position="top-right" />
+          <TopNavBar />
           {children}
         </MantineProvider>
       </body>

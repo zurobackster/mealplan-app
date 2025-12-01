@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button, Text, Box, Paper } from '@mantine/core';
+import { Text, Box } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { ViewOnlyWeekPlanner } from '@/components/planner/ViewOnlyWeekPlanner';
 import { getMonday, formatISODate } from '@/lib/utils/date';
@@ -28,8 +27,6 @@ interface PlannedMeal {
 }
 
 export default function ViewPlanPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<{ username: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Weekly planner state
@@ -42,9 +39,10 @@ export default function ViewPlanPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.isLoggedIn) {
-          setUser(data.user);
+          setLoading(false);
+        } else {
+          setLoading(false);
         }
-        setLoading(false);
       })
       .catch(() => setLoading(false));
   }, []);
@@ -77,28 +75,6 @@ export default function ViewPlanPage() {
     fetchWeeklyPlan(selectedDate);
   }, [selectedDate]);
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      notifications.show({
-        title: 'Logged Out',
-        message: 'You have been logged out successfully',
-        color: 'blue',
-      });
-      router.push('/login');
-    } catch (error) {
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to log out',
-        color: 'red',
-      });
-    }
-  };
-
-  const handleBackToPlanner = () => {
-    router.push('/planner');
-  };
-
   if (loading) {
     return (
       <Box p="xl">
@@ -109,30 +85,6 @@ export default function ViewPlanPage() {
 
   return (
     <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Paper p="md" shadow="sm">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <Text size="xl" fw={700}>
-              View Meal Plan
-            </Text>
-            {user && (
-              <Text c="dimmed" size="sm">
-                Welcome, {user.username}
-              </Text>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <Button onClick={handleBackToPlanner} variant="filled" color="violet">
-              Back to Planner
-            </Button>
-            <Button onClick={handleLogout} variant="outline" color="red" size="sm">
-              Logout
-            </Button>
-          </div>
-        </div>
-      </Paper>
-
       {/* Weekly Planner - Full Width */}
       <Box
         style={{

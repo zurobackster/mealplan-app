@@ -36,7 +36,7 @@ export function CategoryManagerModal({
   const [categories, setCategories] = useState<Category[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryColor, setNewCategoryColor] = useState('#9c27b0');
+  const [newCategoryColor, setNewCategoryColor] = useState('#4CAF50');
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
   const [deleteConfirmOpened, setDeleteConfirmOpened] = useState(false);
@@ -163,7 +163,7 @@ export function CategoryManagerModal({
   const startEdit = (category: Category) => {
     setEditingId(category.id);
     setEditName(category.name);
-    setEditColor(category.color || '#9c27b0');
+    setEditColor(category.color || '#4CAF50');
   };
 
   return (

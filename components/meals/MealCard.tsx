@@ -55,9 +55,7 @@ export function MealCard({
   return (
     <div ref={cardRef} style={style} onClick={onClick}>
       <Card
-      shadow="sm"
       padding="0"
-      radius="md"
       withBorder
       style={{
         cursor: 'grab',
@@ -65,16 +63,18 @@ export function MealCard({
         aspectRatio: '1',
         display: 'flex',
         flexDirection: 'column',
+        borderRadius: '16px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
       }}
       sx={{
         '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
+          transform: 'translateY(-4px) scale(1.02)',
+          boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)',
         },
       }}
     >
       {/* Image - 70% */}
-      <div style={{ flex: '0 0 70%', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ flex: '0 0 70%', position: 'relative', overflow: 'hidden', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
         <Image
           src={imageUrl || '/uploads/placeholder.jpg'}
           alt={title}
@@ -109,7 +109,7 @@ export function MealCard({
         }}
       >
         <Text
-          fw={600}
+          fw={700}
           size="sm"
           lineClamp={2}
           style={{ lineHeight: 1.3 }}
@@ -117,7 +117,15 @@ export function MealCard({
           {title}
         </Text>
         <Group gap="xs">
-          <Rating value={rating} readOnly size="xs" />
+          <Rating
+            value={rating}
+            readOnly
+            size="sm"
+            color="yellow"
+            style={{
+              filter: 'drop-shadow(0 1px 2px rgba(251, 192, 45, 0.3))'
+            }}
+          />
           <Text size="xs" c="dimmed">
             ({rating})
           </Text>
