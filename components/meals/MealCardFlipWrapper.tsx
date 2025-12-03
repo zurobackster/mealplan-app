@@ -11,6 +11,7 @@ interface Meal {
   rating: number;
   recipeText: string | null;
   category?: {
+    id: number;
     name: string;
     color: string | null;
   } | null;

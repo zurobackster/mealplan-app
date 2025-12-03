@@ -4,6 +4,7 @@ import { Group, Button, Text } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { IconChevronLeft, IconChevronRight, IconCalendar } from '@tabler/icons-react';
 import { getMonday, formatWeekRange } from '@/lib/utils/date';
+import dayjs from 'dayjs';
 
 interface WeekSelectorProps {
   selectedDate: Date;
@@ -42,10 +43,28 @@ export function WeekSelector({ selectedDate, onDateChange }: WeekSelectorProps) 
         </Button>
         <DatePickerInput
           value={selectedDate}
-          onChange={(date) => date && onDateChange(date)}
+          onChange={(dateStr: string | null) => {
+            if (dateStr) {
+              const date = new Date(dateStr);
+              onDateChange(date);
+            }
+          }}
           leftSection={<IconCalendar size={18} />}
           size="sm"
           style={{ width: 200 }}
+          getDayProps={(date) => {
+            const isToday = dayjs().isSame(dayjs(date), 'day');
+            return {
+              style: isToday
+                ? {
+                    backgroundColor: '#2196F3',
+                    color: 'white',
+                    fontWeight: 700,
+                    borderRadius: '50%',
+                  }
+                : undefined,
+            };
+          }}
         />
         <Button
           variant="subtle"

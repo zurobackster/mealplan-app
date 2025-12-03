@@ -27,6 +27,7 @@ export function MealCard({
 }: MealCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const el = cardRef.current;
@@ -53,7 +54,13 @@ export function MealCard({
   };
 
   return (
-    <div ref={cardRef} style={style} onClick={onClick}>
+    <div
+      ref={cardRef}
+      style={style}
+      onClick={onClick}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
       <Card
       padding="0"
       withBorder
@@ -64,13 +71,8 @@ export function MealCard({
         display: 'flex',
         flexDirection: 'column',
         borderRadius: '16px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-      }}
-      sx={{
-        '&:hover': {
-          transform: 'translateY(-4px) scale(1.02)',
-          boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)',
-        },
+        boxShadow: isHovering ? '0 12px 24px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
+        transform: isHovering ? 'translateY(-4px) scale(1.02)' : 'none',
       }}
     >
       {/* Image - 70% */}

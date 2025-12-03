@@ -30,13 +30,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/planner', request.url));
   }
 
-  // Redirect root to planner if logged in, otherwise to login
-  if (pathname === '/') {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL('/planner', request.url));
-    } else {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // Redirect root to login if not authenticated (dashboard is now the landing page)
+  if (pathname === '/' && !isLoggedIn) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return NextResponse.next();

@@ -47,6 +47,13 @@ export function TopNavBar() {
         {/* Navigation Links */}
         <Group gap="xs">
           <Button
+            variant={pathname === '/' ? 'filled' : 'subtle'}
+            color="green"
+            onClick={() => router.push('/')}
+          >
+            Dashboard
+          </Button>
+          <Button
             variant={pathname === '/planner' ? 'filled' : 'subtle'}
             color="green"
             onClick={() => router.push('/planner')}
