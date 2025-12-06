@@ -36,6 +36,7 @@ interface DashboardMetrics {
     totalSlots: number;
     filledSlots: number;
     coveragePercentage: number;
+    daysWithMeals: number[];
   };
   mostFrequentlyPlannedMeals: Array<{
     mealId: number;

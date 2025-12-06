@@ -205,6 +205,9 @@ export async function GET(request: NextRequest) {
         totalSlots: totalDays, // Now represents total days (7)
         filledSlots: daysWithMeals, // Now represents days with meals (0-7)
         coveragePercentage,
+        daysWithMeals: currentWeekPlan?.plannedMeals
+          ? Array.from(new Set(currentWeekPlan.plannedMeals.map(pm => pm.dayOfWeek)))
+          : [], // Array of dayOfWeek numbers that have meals (e.g., [1, 3, 5, 7])
       },
       mostFrequentlyPlannedMeals,
     };

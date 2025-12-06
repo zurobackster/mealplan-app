@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Stack, Skeleton, Paper } from '@mantine/core';
+import { Stack, Skeleton, Paper, SimpleGrid } from '@mantine/core';
 import { WeekSelector } from '@/components/planner/WeekSelector';
 import { WeekCoverageRing } from './WeekCoverageRing';
+import { DayStatusTable } from './DayStatusTable';
 import { getMonday, formatISODate } from '@/lib/utils/date';
 
 interface CoverageData {
   totalSlots: number;
   filledSlots: number;
   coveragePercentage: number;
+  daysWithMeals: number[];
 }
 
 export function WeekCoverageRingWrapper() {
@@ -36,6 +38,7 @@ export function WeekCoverageRingWrapper() {
 
   return (
     <Stack gap="md">
+      {/* Week Selector - Full Width */}
       <Paper
         p="md"
         radius={12}
@@ -48,10 +51,21 @@ export function WeekCoverageRingWrapper() {
       >
         <WeekSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
       </Paper>
+
+      {/* Coverage Cards - 50/50 Split */}
       {loading ? (
         <Skeleton height={250} radius={12} />
       ) : coverage ? (
-        <WeekCoverageRing filled={coverage.filledSlots} total={coverage.totalSlots} />
+        <SimpleGrid cols={2} spacing="md">
+          {/* Left Card: Coverage Ring */}
+          <WeekCoverageRing filled={coverage.filledSlots} total={coverage.totalSlots} />
+
+          {/* Right Card: Day Status Table */}
+          <DayStatusTable
+            selectedDate={selectedDate}
+            daysWithMeals={coverage.daysWithMeals}
+          />
+        </SimpleGrid>
       ) : null}
     </Stack>
   );
