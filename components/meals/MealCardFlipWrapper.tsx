@@ -95,10 +95,12 @@ export function MealCardFlipWrapper({
 
         {/* Back */}
         <div
+          onClick={handleClose}
           style={{
             backfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
             display: isFlipped ? 'block' : 'none',
+            cursor: 'pointer',
           }}
         >
           <MealCardBack
