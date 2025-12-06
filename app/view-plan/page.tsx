@@ -84,7 +84,7 @@ export default function ViewPlanPage() {
   }
 
   return (
-    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column', paddingTop: '88px' }}>
       {/* Weekly Planner - Full Width */}
       <Box
         style={{

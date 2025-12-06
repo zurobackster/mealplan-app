@@ -72,7 +72,7 @@ export function MealCard({
         flexDirection: 'column',
         borderRadius: '16px',
         boxShadow: isHovering ? '0 12px 24px rgba(0, 0, 0, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.08)',
-        transform: isHovering ? 'translateY(-4px) scale(1.02)' : 'none',
+        transform: isHovering ? 'translateY(-4px)' : 'none',
       }}
     >
       {/* Image - 70% */}

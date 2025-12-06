@@ -62,6 +62,7 @@ export function ViewOnlyWeekPlanner({
 
       {/* Horizontal scroll with native CSS overflow */}
       <div
+        className="horizontal-scroll-container"
         style={{
           flex: 1,
           overflowX: 'auto',
