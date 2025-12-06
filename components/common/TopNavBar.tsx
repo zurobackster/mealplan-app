@@ -29,8 +29,10 @@ export function TopNavBar() {
       style={{
         borderRadius: 0,
         borderBottom: '1px solid #e9ecef',
-        position: 'sticky',
+        position: 'fixed',
         top: 0,
+        left: 0,
+        right: 0,
         zIndex: 100,
         backgroundColor: '#f2f1d4', // Cream accent
       }}

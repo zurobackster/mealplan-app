@@ -307,7 +307,7 @@ export default function PlannerPage() {
   }
 
   return (
-    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box style={{ height: '100vh', display: 'flex', flexDirection: 'column', paddingTop: '88px' }}>
         {/* Main Content - Split View */}
         <Box style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Left Panel - Meal Catalog (50%) */}

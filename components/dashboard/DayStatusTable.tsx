@@ -16,13 +16,11 @@ export function DayStatusTable({ selectedDate, daysWithMeals }: DayStatusTablePr
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const dayOfWeek = i + 1; // 1-7
     const date = monday.add(i, 'days');
-    const dayName = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
-    const dateNum = date.date();
     const hasMeal = daysWithMeals.includes(dayOfWeek);
 
     return {
       dayOfWeek,
-      label: `${dayName} ${dateNum}`,
+      label: date.format('ddd, MMM D'),
       hasMeal,
     };
   });

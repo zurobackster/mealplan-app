@@ -22,3 +22,36 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* Horizontal scroll container styling for weekly planner */
+.horizontal-scroll-container {
+  scrollbar-width: auto; /* Firefox */
+  scrollbar-gutter: stable; /* Reserve space for scrollbar */
+}
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.horizontal-scroll-container::-webkit-scrollbar {
+  height: 14px; /* Larger scrollbar for easier clicking */
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 7px;
+  margin: 0 8px; /* Add margin on sides */
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb {
+  background: #4CAF50; /* Green primary color */
+  border-radius: 7px;
+  border: 2px solid #f8f9fa; /* Border creates padding effect */
+  min-width: 50px; /* Minimum thumb width */
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #43A047; /* Darker green on hover */
+  cursor: pointer;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb:active {
+  background: #388E3C; /* Even darker when clicking */
+}

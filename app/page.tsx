@@ -130,7 +130,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <Box style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }} p={24}>
+    <Box style={{ minHeight: '100vh', backgroundColor: '#f8f9fa', paddingTop: '88px' }} p={24}>
       <Stack gap={24}>
         {/* Header */}
         <div>

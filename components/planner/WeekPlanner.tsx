@@ -55,6 +55,23 @@ export function WeekPlanner({
     });
   }, [scrollViewportRef]);
 
+  // Mouse wheel horizontal scroll
+  useEffect(() => {
+    const container = scrollViewportRef?.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Convert vertical wheel scroll to horizontal scroll
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
+  }, [scrollViewportRef]);
+
   if (loading) {
     return (
       <Center h={400}>
@@ -80,6 +97,7 @@ export function WeekPlanner({
       {/* Horizontal scroll with native CSS overflow */}
       <div
         ref={scrollViewportRef}
+        className="horizontal-scroll-container"
         style={{
           flex: 1,
           overflowX: 'auto',
