@@ -11,10 +11,15 @@ interface WeekCoverageRingProps {
 export function WeekCoverageRing({ filled, total }: WeekCoverageRingProps) {
   const percentage = total > 0 ? Math.round((filled / total) * 100) : 0;
 
+  // Calculate the end angle based on percentage (clockwise from top)
+  // StartAngle: 90 (top), EndAngle: 90 - (percentage * 3.6) degrees
+  const startAngle = 90;
+  const endAngle = 90 - (percentage * 3.6); // 3.6 degrees per percent
+
   const data = [
     {
       name: 'Coverage',
-      value: percentage,
+      value: 100, // Use full value for the bar
       fill: '#4CAF50',
     },
   ];
@@ -42,8 +47,8 @@ export function WeekCoverageRing({ filled, total }: WeekCoverageRingProps) {
               outerRadius="90%"
               barSize={20}
               data={data}
-              startAngle={90}
-              endAngle={-270}
+              startAngle={startAngle}
+              endAngle={endAngle}
             >
               <RadialBar
                 background
@@ -68,7 +73,7 @@ export function WeekCoverageRing({ filled, total }: WeekCoverageRingProps) {
               {percentage}%
             </Text>
             <Text size="sm" c="dimmed" mt={4}>
-              {filled}/{total} slots
+              {filled}/{total} days
             </Text>
           </Center>
         </div>

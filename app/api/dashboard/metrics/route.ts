@@ -1,18 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db/prisma';
 import { sessionOptions } from '@/lib/auth/session';
 import { SessionData } from '@/lib/auth/types';
-import { getMonday } from '@/lib/utils/date';
+import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import utc from 'dayjs/plugin/utc';
 
-export async function GET() {
+dayjs.extend(isoWeek);
+dayjs.extend(utc);
+
+export async function GET(request: NextRequest) {
   try {
     // Check authentication
     const session = await getIronSession<SessionData>(await cookies(), sessionOptions);
     if (!session.isLoggedIn) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Get week parameter (optional, defaults to current week)
+    const searchParams = request.nextUrl.searchParams;
+    const weekStartDateParam = searchParams.get('weekStartDate');
+
+    // Calculate week start date in UTC
+    const weekStartDate = weekStartDateParam
+      ? dayjs.utc(weekStartDateParam).isoWeekday(1).startOf('day').toDate()
+      : dayjs.utc().isoWeekday(1).startOf('day').toDate();
 
     // Run all queries in parallel for better performance
     const [
@@ -90,15 +104,12 @@ export async function GET() {
       }),
 
       // Current week plan for coverage
-      (async () => {
-        const currentMonday = getMonday(new Date());
-        return await prisma.weeklyPlan.findUnique({
-          where: { weekStartDate: currentMonday },
-          include: {
-            plannedMeals: true,
-          },
-        });
-      })(),
+      prisma.weeklyPlan.findUnique({
+        where: { weekStartDate },
+        include: {
+          plannedMeals: true,
+        },
+      }),
     ]);
 
     // Fetch category details for groupBy results
@@ -160,9 +171,13 @@ export async function GET() {
     });
 
     // Calculate current week coverage
-    const totalSlots = 28; // 7 days × 4 slots
-    const filledSlots = currentWeekPlan?.plannedMeals.length || 0;
-    const coveragePercentage = totalSlots > 0 ? Math.round((filledSlots / totalSlots) * 100) : 0;
+    // Count unique days that have at least one meal
+    const daysWithMeals = currentWeekPlan?.plannedMeals
+      ? new Set(currentWeekPlan.plannedMeals.map(pm => pm.dayOfWeek)).size
+      : 0;
+    const totalDays = 7; // Monday-Sunday
+    const filledSlots = daysWithMeals; // For backward compatibility with response structure
+    const coveragePercentage = Math.round((daysWithMeals / totalDays) * 100);
 
     // Calculate recipe completion rate
     const recipeCompletionRate = totalMeals > 0
@@ -187,8 +202,8 @@ export async function GET() {
       mealsWithoutRecipes,
       recipeCompletionRate,
       currentWeekCoverage: {
-        totalSlots,
-        filledSlots,
+        totalSlots: totalDays, // Now represents total days (7)
+        filledSlots: daysWithMeals, // Now represents days with meals (0-7)
         coveragePercentage,
       },
       mostFrequentlyPlannedMeals,

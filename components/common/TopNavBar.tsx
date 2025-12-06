@@ -32,7 +32,7 @@ export function TopNavBar() {
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        backgroundColor: 'white',
+        backgroundColor: '#f2f1d4', // Cream accent
       }}
     >
       <Group justify="space-between">

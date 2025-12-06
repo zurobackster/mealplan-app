@@ -5,7 +5,7 @@ import { Box, Text, SimpleGrid, Stack, Loader, Center, Paper } from '@mantine/co
 import { IconChefHat, IconStar, IconChartBar, IconBook } from '@tabler/icons-react';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { TopMealsGrid } from '@/components/dashboard/TopMealsGrid';
-import { WeekCoverageRing } from '@/components/dashboard/WeekCoverageRing';
+import { WeekCoverageRingWrapper } from '@/components/dashboard/WeekCoverageRingWrapper';
 import { CategoryDistributionChart } from '@/components/dashboard/CategoryDistributionChart';
 import { FrequencyChart } from '@/components/dashboard/FrequencyChart';
 import { MonthCalendar } from '@/components/dashboard/MonthCalendar';
@@ -174,10 +174,7 @@ export default function DashboardPage() {
         </SimpleGrid>
 
         {/* Week Coverage */}
-        <WeekCoverageRing
-          filled={metrics.currentWeekCoverage.filledSlots}
-          total={metrics.currentWeekCoverage.totalSlots}
-        />
+        <WeekCoverageRingWrapper />
 
         {/* Charts Row */}
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
