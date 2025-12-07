@@ -13,12 +13,14 @@ interface Category {
 
 interface CategoryTabsProps {
   categories: Category[];
+  totalMealCount: number;
   selectedCategoryId: number | null;
   onCategoryChange: (categoryId: number | null) => void;
 }
 
 export function CategoryTabs({
   categories,
+  totalMealCount,
   selectedCategoryId,
   onCategoryChange,
 }: CategoryTabsProps) {
@@ -34,7 +36,7 @@ export function CategoryTabs({
           <Group gap="xs">
             All Meals
             <Badge size="sm" variant="light" color="gray">
-              {categories.reduce((sum, cat) => sum + (cat._count?.meals || 0), 0)}
+              {totalMealCount}
             </Badge>
           </Group>
         </Tabs.Tab>

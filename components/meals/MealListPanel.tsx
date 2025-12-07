@@ -54,6 +54,7 @@ export function MealListPanel({
   onMealDeleted,
 }: MealListPanelProps) {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [totalMealCount, setTotalMealCount] = useState(0);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,7 +69,8 @@ export function MealListPanel({
       const response = await fetch('/api/categories');
       if (response.ok) {
         const data = await response.json();
-        setCategories(data);
+        setCategories(data.categories);
+        setTotalMealCount(data.totalMealCount);
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
@@ -185,6 +187,7 @@ export function MealListPanel({
         {/* Category Tabs */}
         <CategoryTabs
           categories={categories}
+          totalMealCount={totalMealCount}
           selectedCategoryId={selectedCategoryId}
           onCategoryChange={setSelectedCategoryId}
         />

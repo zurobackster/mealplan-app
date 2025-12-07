@@ -26,7 +26,13 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
-    return NextResponse.json(categories);
+    // Get total meal count (including meals without categories)
+    const totalMealCount = await prisma.meal.count();
+
+    return NextResponse.json({
+      categories,
+      totalMealCount,
+    });
   } catch (error) {
     console.error('Get categories error:', error);
     return NextResponse.json(
