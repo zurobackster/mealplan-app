@@ -65,7 +65,7 @@ export function MealEditorModal({
     if (opened) {
       fetch('/api/categories')
         .then((res) => res.json())
-        .then((data) => setCategories(data))
+        .then((data) => setCategories(data.categories))
         .catch((error) => console.error('Failed to fetch categories:', error));
     }
   }, [opened]);

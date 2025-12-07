@@ -48,7 +48,7 @@ export function CategoryManagerModal({
       const response = await fetch('/api/categories');
       if (response.ok) {
         const data = await response.json();
-        setCategories(data);
+        setCategories(data.categories);
       }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
