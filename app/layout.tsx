@@ -10,6 +10,11 @@ import { TopNavBar } from '@/components/common/TopNavBar';
 export const metadata: Metadata = {
   title: "Meal Planner",
   description: "Weekly meal planning made easy",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 const theme = createTheme({

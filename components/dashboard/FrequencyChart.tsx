@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Paper, Text, Stack } from '@mantine/core';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -13,6 +14,11 @@ interface FrequencyChartProps {
 }
 
 export function FrequencyChart({ data }: FrequencyChartProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   if (data.length === 0) {
     return (
       <Paper
@@ -56,32 +62,34 @@ export function FrequencyChart({ data }: FrequencyChartProps) {
           Most Frequently Planned
         </Text>
 
-        <div style={{ height: 250 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="name" type="category" width={90} />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <Paper p="xs" shadow="sm" withBorder>
-                        <Text size="sm" fw={600}>{payload[0].payload.fullName}</Text>
-                        <Text size="xs" c="dimmed">Planned {payload[0].value} times</Text>
-                      </Paper>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Bar dataKey="count" fill="#4CAF50" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div style={{ height: 250, minHeight: 250 }}>
+          {mounted && (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={90} />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <Paper p="xs" shadow="sm" withBorder>
+                          <Text size="sm" fw={600}>{payload[0].payload.fullName}</Text>
+                          <Text size="xs" c="dimmed">Planned {payload[0].value} times</Text>
+                        </Paper>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="count" fill="#4CAF50" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </Stack>
     </Paper>

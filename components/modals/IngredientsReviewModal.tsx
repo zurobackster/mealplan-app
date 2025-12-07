@@ -146,7 +146,7 @@ export function IngredientsReviewModal({
                     <ScrollArea h={100}>
                       <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
                         {meal.recipeText || (
-                          <Text c="dimmed" size="sm">No recipe available</Text>
+                          <Text component="span" c="dimmed" size="sm">No recipe available</Text>
                         )}
                       </Text>
                     </ScrollArea>

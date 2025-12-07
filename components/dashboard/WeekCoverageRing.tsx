@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Paper, Text, Stack, Center } from '@mantine/core';
 import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts';
 
@@ -9,6 +10,11 @@ interface WeekCoverageRingProps {
 }
 
 export function WeekCoverageRing({ filled, total }: WeekCoverageRingProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const percentage = total > 0 ? Math.round((filled / total) * 100) : 0;
 
   // Calculate the end angle based on percentage (clockwise from top)
@@ -38,25 +44,27 @@ export function WeekCoverageRing({ filled, total }: WeekCoverageRingProps) {
           Current Week Coverage
         </Text>
 
-        <div style={{ position: 'relative', height: 200 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <RadialBarChart
-              cx="50%"
-              cy="50%"
-              innerRadius="70%"
-              outerRadius="90%"
-              barSize={20}
-              data={data}
-              startAngle={startAngle}
-              endAngle={endAngle}
-            >
-              <RadialBar
-                background
-                dataKey="value"
-                cornerRadius={10}
-              />
-            </RadialBarChart>
-          </ResponsiveContainer>
+        <div style={{ position: 'relative', height: 200, minHeight: 200 }}>
+          {mounted && (
+            <ResponsiveContainer width="100%" height="100%">
+              <RadialBarChart
+                cx="50%"
+                cy="50%"
+                innerRadius="70%"
+                outerRadius="90%"
+                barSize={20}
+                data={data}
+                startAngle={startAngle}
+                endAngle={endAngle}
+              >
+                <RadialBar
+                  background
+                  dataKey="value"
+                  cornerRadius={10}
+                />
+              </RadialBarChart>
+            </ResponsiveContainer>
+          )}
 
           {/* Center text */}
           <Center
