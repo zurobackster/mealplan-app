@@ -87,7 +87,7 @@ export function PlannedMealCard({
       <Group gap="xs" wrap="nowrap" align="flex-start">
         <div style={{ width: 40, height: 40, flexShrink: 0 }}>
           <Image
-            src={imageUrl || '/uploads/placeholder.jpg'}
+            src={imageUrl}
             alt={title}
             width={40}
             height={40}

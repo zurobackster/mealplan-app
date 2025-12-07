@@ -78,7 +78,7 @@ export function MealCard({
       {/* Image - 70% */}
       <div style={{ flex: '0 0 70%', position: 'relative', overflow: 'hidden', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
         <Image
-          src={imageUrl || '/uploads/placeholder.jpg'}
+          src={imageUrl}
           alt={title}
           height="100%"
           fit="cover"

@@ -46,7 +46,7 @@ export function TopMealsGrid({ meals }: TopMealsGridProps) {
           <div style={{ position: 'relative', paddingTop: '100%', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
               <Image
-                src={meal.imageUrl || '/uploads/placeholder.jpg'}
+                src={meal.imageUrl}
                 alt={meal.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 fallbackSrc="https://placehold.co/200x200/e0e0e0/666666?text=No+Image"
