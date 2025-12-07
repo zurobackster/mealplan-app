@@ -1,34 +1,42 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Table, Text, Group, Center, Stack, Loader, ScrollArea, Rating } from '@mantine/core';
+import { Modal, Table, Text, Group, Center, Stack, Loader, ScrollArea, Rating, List } from '@mantine/core';
 import { IconList, IconAlertCircle } from '@tabler/icons-react';
 import { getMonday, formatISODate } from '@/lib/utils/date';
 
+interface PlannedDay {
+  dayOfWeek: number;
+  date: string;
+  slots: string[];
+}
+
 interface MealData {
-  slot: string;
   mealId: number;
   title: string;
   rating: number;
   recipeText: string | null;
   imageUrl: string | null;
-}
-
-interface DayData {
-  dayOfWeek: number;
-  date: string;
-  meals: MealData[];
+  plannedDays: PlannedDay[];
+  earliestDay: number;
 }
 
 interface WeeklyIngredientsData {
   weekStartDate: string;
-  days: DayData[];
+  meals: MealData[];
 }
 
 interface IngredientsReviewModalProps {
   opened: boolean;
   onClose: () => void;
   selectedDate: Date;
+}
+
+// Helper function to format slots text
+function formatSlots(slots: string[]): string {
+  return slots
+    .map((slot) => slot.charAt(0) + slot.slice(1).toLowerCase())
+    .join(', ');
 }
 
 export function IngredientsReviewModal({
@@ -65,8 +73,8 @@ export function IngredientsReviewModal({
     fetchWeeklyIngredients();
   }, [opened, selectedDate]);
 
-  // Check if entire week is empty
-  const isWeekEmpty = data?.days.every(day => day.meals.length === 0);
+  // Check if week is empty
+  const isWeekEmpty = data?.meals.length === 0;
 
   return (
     <Modal
@@ -109,63 +117,42 @@ export function IngredientsReviewModal({
           <Table striped highlightOnHover withTableBorder withColumnBorders>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th style={{ width: '150px' }}>Day</Table.Th>
                 <Table.Th style={{ width: '250px' }}>Meal</Table.Th>
+                <Table.Th style={{ width: '350px' }}>Days Planned</Table.Th>
                 <Table.Th>Recipe / Ingredients</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {data?.days.map((day) => {
-                if (day.meals.length === 0) {
-                  // Show "No meals planned" for empty days
-                  return (
-                    <Table.Tr key={day.dayOfWeek}>
-                      <Table.Td>
-                        <Text fw={600} size="sm">
-                          {day.date}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td c="dimmed">
-                        <Text size="sm">No meals planned</Text>
-                      </Table.Td>
-                      <Table.Td c="dimmed">
-                        <Text size="sm">-</Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  );
-                }
-
-                // Show all meals for this day
-                return day.meals.map((meal, mealIndex) => (
-                  <Table.Tr key={`${day.dayOfWeek}-${meal.mealId}-${mealIndex}`}>
-                    {/* Only show day in first meal row */}
-                    {mealIndex === 0 && (
-                      <Table.Td rowSpan={day.meals.length} style={{ verticalAlign: 'top' }}>
-                        <Text fw={600} size="sm">
-                          {day.date}
-                        </Text>
-                      </Table.Td>
-                    )}
-                    <Table.Td style={{ verticalAlign: 'top' }}>
-                      <Stack gap={4}>
-                        <Text size="sm" fw={500}>
-                          {meal.title}
-                        </Text>
-                        <Rating value={meal.rating} readOnly size="xs" color="yellow" />
-                      </Stack>
-                    </Table.Td>
-                    <Table.Td style={{ verticalAlign: 'top' }}>
-                      <ScrollArea h={100}>
-                        <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
-                          {meal.recipeText || (
-                            <Text c="dimmed" size="sm">No recipe available</Text>
-                          )}
-                        </Text>
-                      </ScrollArea>
-                    </Table.Td>
-                  </Table.Tr>
-                ));
-              })}
+              {data?.meals.map((meal) => (
+                <Table.Tr key={meal.mealId}>
+                  <Table.Td style={{ verticalAlign: 'top' }}>
+                    <Stack gap={4}>
+                      <Text size="sm" fw={500}>
+                        {meal.title}
+                      </Text>
+                      <Rating value={meal.rating} readOnly size="xs" color="yellow" />
+                    </Stack>
+                  </Table.Td>
+                  <Table.Td style={{ verticalAlign: 'top' }}>
+                    <List size="sm" spacing={4}>
+                      {meal.plannedDays.map((day, index) => (
+                        <List.Item key={`${meal.mealId}-${day.dayOfWeek}-${index}`}>
+                          {day.date} ({formatSlots(day.slots)})
+                        </List.Item>
+                      ))}
+                    </List>
+                  </Table.Td>
+                  <Table.Td style={{ verticalAlign: 'top' }}>
+                    <ScrollArea h={100}>
+                      <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>
+                        {meal.recipeText || (
+                          <Text c="dimmed" size="sm">No recipe available</Text>
+                        )}
+                      </Text>
+                    </ScrollArea>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
             </Table.Tbody>
           </Table>
         </ScrollArea>

@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const weekStartDate = new Date(weekStartDateStr);
+    // CRITICAL: Work with date strings to avoid timezone issues
+    // Parse as UTC to prevent timezone shifting
+    const normalizedDateStr = weekStartDateStr; // Already in YYYY-MM-DD format
+    const weekStartDate = new Date(normalizedDateStr + 'T00:00:00.000Z');
 
     // Fetch weekly plan with full meal data
     const weeklyPlan = await prisma.weeklyPlan.findUnique({
@@ -48,65 +51,86 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // If no weekly plan exists, return empty data structure
+    // If no weekly plan exists, return empty
     if (!weeklyPlan) {
-      const days = Array.from({ length: 7 }, (_, i) => {
-        const date = dayjs(weekStartDate).add(i, 'days');
-        return {
-          dayOfWeek: i + 1,
-          date: date.format('ddd, MMM D'),
-          meals: [],
-        };
-      });
-
       return NextResponse.json({
         weekStartDate: weekStartDateStr,
-        days,
+        meals: [],
       });
     }
 
-    // Group planned meals by day
-    const mealsByDay = new Map<number, any[]>();
+    // Group by meal
+    const mealMap = new Map<number, {
+      mealId: number;
+      title: string;
+      rating: number;
+      recipeText: string | null;
+      imageUrl: string | null;
+      daySlots: Map<number, Set<string>>;
+      earliestDay: number;
+    }>();
 
     weeklyPlan.plannedMeals.forEach((plannedMeal) => {
-      if (!mealsByDay.has(plannedMeal.dayOfWeek)) {
-        mealsByDay.set(plannedMeal.dayOfWeek, []);
+      const mealId = plannedMeal.meal.id;
+
+      if (!mealMap.has(mealId)) {
+        mealMap.set(mealId, {
+          mealId,
+          title: plannedMeal.meal.title,
+          rating: plannedMeal.meal.rating,
+          recipeText: plannedMeal.meal.recipeText,
+          imageUrl: plannedMeal.meal.imageUrl,
+          daySlots: new Map<number, Set<string>>(),
+          earliestDay: plannedMeal.dayOfWeek,
+        });
       }
 
-      mealsByDay.get(plannedMeal.dayOfWeek)!.push({
-        slot: plannedMeal.slot,
-        mealId: plannedMeal.meal.id,
-        title: plannedMeal.meal.title,
-        rating: plannedMeal.meal.rating,
-        recipeText: plannedMeal.meal.recipeText,
-        imageUrl: plannedMeal.meal.imageUrl,
-      });
+      const meal = mealMap.get(mealId)!;
+
+      // Track earliest day
+      meal.earliestDay = Math.min(meal.earliestDay, plannedMeal.dayOfWeek);
+
+      // Add slot to day
+      if (!meal.daySlots.has(plannedMeal.dayOfWeek)) {
+        meal.daySlots.set(plannedMeal.dayOfWeek, new Set());
+      }
+      meal.daySlots.get(plannedMeal.dayOfWeek)!.add(plannedMeal.slot);
     });
 
-    // Sort meals within each day by slot order
-    mealsByDay.forEach((meals) => {
-      meals.sort((a, b) => {
-        return (SLOT_ORDER[a.slot as keyof typeof SLOT_ORDER] || 99) -
-               (SLOT_ORDER[b.slot as keyof typeof SLOT_ORDER] || 99);
-      });
-    });
-
-    // Create days array (all 7 days, Mon-Sun)
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const dayOfWeek = i + 1;
-      const date = dayjs(weekStartDate).add(i, 'days');
-      const meals = mealsByDay.get(dayOfWeek) || [];
+    // Format and sort meals
+    const meals = Array.from(mealMap.values()).map((meal) => {
+      const plannedDays = Array.from(meal.daySlots.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map(([dayOfWeek, slots]) => {
+          // Use normalized Monday string to calculate dates
+          const date = dayjs(normalizedDateStr).add(dayOfWeek - 1, 'days');
+          const sortedSlots = Array.from(slots).sort(
+            (a, b) => (SLOT_ORDER[a as keyof typeof SLOT_ORDER] || 99) - (SLOT_ORDER[b as keyof typeof SLOT_ORDER] || 99)
+          );
+          return {
+            dayOfWeek,
+            date: date.format('ddd, MMM D'),
+            slots: sortedSlots,
+          };
+        });
 
       return {
-        dayOfWeek,
-        date: date.format('ddd, MMM D'),
-        meals,
+        mealId: meal.mealId,
+        title: meal.title,
+        rating: meal.rating,
+        recipeText: meal.recipeText,
+        imageUrl: meal.imageUrl,
+        plannedDays,
+        earliestDay: meal.earliestDay,
       };
     });
 
+    // Sort by earliest day
+    meals.sort((a, b) => a.earliestDay - b.earliestDay);
+
     return NextResponse.json({
       weekStartDate: weekStartDateStr,
-      days,
+      meals,
     });
   } catch (error) {
     console.error('Error fetching weekly ingredients:', error);

@@ -27,15 +27,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Parse the date
-    const startDate = new Date(weekStartDate);
-
-    if (isNaN(startDate.getTime())) {
+    // Validate date format (YYYY-MM-DD)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStartDate)) {
       return NextResponse.json(
         { error: 'Invalid date format' },
         { status: 400 }
       );
     }
+
+    // Frontend already sends Monday - use it directly with explicit UTC
+    const startDate = new Date(weekStartDate + 'T00:00:00.000Z');
 
     // Try to find existing plan
     let weeklyPlan = await prisma.weeklyPlan.findUnique({
@@ -110,14 +111,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const startDate = new Date(weekStartDate);
-
-    if (isNaN(startDate.getTime())) {
+    // Validate date format (YYYY-MM-DD)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(weekStartDate)) {
       return NextResponse.json(
         { error: 'Invalid date format' },
         { status: 400 }
       );
     }
+
+    // Frontend already sends Monday - use it directly with explicit UTC
+    const startDate = new Date(weekStartDate + 'T00:00:00.000Z');
 
     const weeklyPlan = await prisma.weeklyPlan.create({
       data: {
