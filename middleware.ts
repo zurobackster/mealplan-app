@@ -7,8 +7,8 @@ import { SessionData } from '@/lib/auth/types';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow access to auth API routes
-  if (pathname.startsWith('/api/auth')) {
+  // Allow access to auth API routes, health check, and image serving
+  if (pathname.startsWith('/api/auth') || pathname === '/api/health' || pathname.startsWith('/api/images')) {
     return NextResponse.next();
   }
 

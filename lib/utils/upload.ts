@@ -33,8 +33,8 @@ export async function saveBase64Image(
 
   await writeFile(filePath, buffer);
 
-  // Return public URL
-  return `/uploads/${filename}`;
+  // Return API route URL (dynamic serving to support production mode)
+  return `/api/images/${filename}`;
 }
 
 /**

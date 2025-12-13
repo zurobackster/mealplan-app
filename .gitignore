@@ -41,7 +41,8 @@ next-env.d.ts
 /prisma/dev.db-journal
 /prisma/migrations
 
-# uploads
-/public/uploads
+# uploads - track directory structure but ignore uploaded images
+/public/uploads/*
+!/public/uploads/.gitkeep
 
 /app/generated/prisma
