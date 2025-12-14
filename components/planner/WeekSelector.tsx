@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import { Group, Button, Text } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
-import { IconChevronLeft, IconChevronRight, IconCalendar, IconList } from '@tabler/icons-react';
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconCalendar,
+  IconList,
+  IconDownload,
+} from '@tabler/icons-react';
 import { getMonday, formatWeekRange } from '@/lib/utils/date';
 import dayjs from 'dayjs';
 import { IngredientsReviewModal } from '@/components/modals/IngredientsReviewModal';
@@ -11,9 +17,16 @@ import { IngredientsReviewModal } from '@/components/modals/IngredientsReviewMod
 interface WeekSelectorProps {
   selectedDate: Date;
   onDateChange: (date: Date) => void;
+  onExportPlan?: () => void;
+  exporting?: boolean;
 }
 
-export function WeekSelector({ selectedDate, onDateChange }: WeekSelectorProps) {
+export function WeekSelector({
+  selectedDate,
+  onDateChange,
+  onExportPlan,
+  exporting = false,
+}: WeekSelectorProps) {
   const [modalOpened, setModalOpened] = useState(false);
   const monday = getMonday(selectedDate);
 
@@ -90,6 +103,18 @@ export function WeekSelector({ selectedDate, onDateChange }: WeekSelectorProps) 
           <Button variant="light" size="sm" onClick={handleToday}>
             Today
           </Button>
+          {onExportPlan && (
+            <Button
+              variant="light"
+              size="sm"
+              color="blue"
+              leftSection={<IconDownload size={16} />}
+              onClick={onExportPlan}
+              loading={exporting}
+            >
+              Export Plan
+            </Button>
+          )}
           <Button
             variant="light"
             size="sm"

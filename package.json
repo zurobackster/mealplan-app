@@ -24,6 +24,7 @@
     "@tabler/icons-react": "^3.35.0",
     "bcryptjs": "^3.0.3",
     "dayjs": "^1.11.19",
+    "html-to-image": "^1.11.13",
     "iron-session": "^8.0.4",
     "next": "15.5.9",
     "react": "^19.0.0",

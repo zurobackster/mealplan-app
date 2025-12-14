@@ -1,9 +1,32 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Table, Text, Group, Center, Stack, Loader, ScrollArea, Rating, List } from '@mantine/core';
-import { IconList, IconAlertCircle } from '@tabler/icons-react';
+import {
+  Modal,
+  Table,
+  Text,
+  Group,
+  Center,
+  Stack,
+  Loader,
+  ScrollArea,
+  Rating,
+  List,
+  Button,
+} from '@mantine/core';
+import {
+  IconList,
+  IconAlertCircle,
+  IconCopy,
+  IconBrandWhatsapp,
+  IconCheck,
+} from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
 import { getMonday, formatISODate } from '@/lib/utils/date';
+import {
+  generateIngredientsText,
+  type WeeklyIngredientsData as WeeklyIngredientsFormatterData,
+} from '@/lib/utils/ingredientsFormatter';
 
 interface PlannedDay {
   dayOfWeek: number;
@@ -75,6 +98,65 @@ export function IngredientsReviewModal({
 
   // Check if week is empty
   const isWeekEmpty = data?.meals.length === 0;
+
+  const handleCopyToClipboard = async () => {
+    if (!data) return;
+
+    try {
+      const text = generateIngredientsText(data as WeeklyIngredientsFormatterData);
+      await navigator.clipboard.writeText(text);
+
+      notifications.show({
+        title: 'Copied!',
+        message: 'Ingredients copied to clipboard',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
+    } catch (error) {
+      // Fallback for older browsers or HTTP contexts
+      const textArea = document.createElement('textarea');
+      const text = generateIngredientsText(data as WeeklyIngredientsFormatterData);
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+
+      try {
+        document.execCommand('copy');
+        notifications.show({
+          title: 'Copied!',
+          message: 'Ingredients copied to clipboard',
+          color: 'green',
+          icon: <IconCheck size={16} />,
+        });
+      } catch (err) {
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to copy to clipboard',
+          color: 'red',
+        });
+      }
+
+      document.body.removeChild(textArea);
+    }
+  };
+
+  const handleShareToWhatsApp = () => {
+    if (!data) return;
+
+    const text = generateIngredientsText(data as WeeklyIngredientsFormatterData);
+    const encodedText = encodeURIComponent(text);
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedText}`;
+
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
+    notifications.show({
+      title: 'Opening WhatsApp',
+      message: 'Share your meal plan ingredients',
+      color: 'green',
+    });
+  };
 
   return (
     <Modal
@@ -156,6 +238,34 @@ export function IngredientsReviewModal({
             </Table.Tbody>
           </Table>
         </ScrollArea>
+      )}
+
+      {!loading && !isWeekEmpty && (
+        <Group
+          justify="flex-end"
+          p="md"
+          style={{
+            borderTop: '1px solid #e9ecef',
+            backgroundColor: '#f8f9fa',
+          }}
+        >
+          <Button
+            variant="light"
+            color="blue"
+            leftSection={<IconCopy size={16} />}
+            onClick={handleCopyToClipboard}
+          >
+            Copy to Clipboard
+          </Button>
+          <Button
+            variant="light"
+            color="green"
+            leftSection={<IconBrandWhatsapp size={16} />}
+            onClick={handleShareToWhatsApp}
+          >
+            Share to WhatsApp
+          </Button>
+        </Group>
       )}
     </Modal>
   );
