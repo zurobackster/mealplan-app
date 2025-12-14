@@ -14,21 +14,34 @@ interface Category {
 interface CategoryTabsProps {
   categories: Category[];
   totalMealCount: number;
-  selectedCategoryId: number | null;
-  onCategoryChange: (categoryId: number | null) => void;
+  uncategorizedMealCount: number;
+  selectedCategoryId: number | null | -1;
+  onCategoryChange: (categoryId: number | null | -1) => void;
 }
 
 export function CategoryTabs({
   categories,
   totalMealCount,
+  uncategorizedMealCount,
   selectedCategoryId,
   onCategoryChange,
 }: CategoryTabsProps) {
+  const tabValue =
+    selectedCategoryId === -1
+      ? 'uncategorized'
+      : selectedCategoryId?.toString() || 'all';
+
   return (
     <Tabs
-      value={selectedCategoryId?.toString() || 'all'}
+      value={tabValue}
       onChange={(value) => {
-        onCategoryChange(value === 'all' ? null : parseInt(value || '0'));
+        if (value === 'all') {
+          onCategoryChange(null);
+        } else if (value === 'uncategorized') {
+          onCategoryChange(-1);
+        } else {
+          onCategoryChange(parseInt(value || '0'));
+        }
       }}
     >
       <Tabs.List>
@@ -37,6 +50,14 @@ export function CategoryTabs({
             All Meals
             <Badge size="sm" variant="light" color="gray">
               {totalMealCount}
+            </Badge>
+          </Group>
+        </Tabs.Tab>
+        <Tabs.Tab value="uncategorized" color="cyan">
+          <Group gap="xs">
+            Others
+            <Badge size="sm" variant="light" color="cyan">
+              {uncategorizedMealCount}
             </Badge>
           </Group>
         </Tabs.Tab>

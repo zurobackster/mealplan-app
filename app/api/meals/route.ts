@@ -18,12 +18,23 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const categoryId = searchParams.get('categoryId');
+    const categoryIdParam = searchParams.get('categoryId');
+
+    // Determine where clause based on parameter
+    let whereClause;
+    if (categoryIdParam === 'uncategorized') {
+      // Filter for meals with null categoryId
+      whereClause = { categoryId: null };
+    } else if (categoryIdParam) {
+      // Filter by specific category
+      whereClause = { categoryId: parseInt(categoryIdParam) };
+    } else {
+      // No filter - all meals
+      whereClause = undefined;
+    }
 
     const meals = await prisma.meal.findMany({
-      where: categoryId
-        ? { categoryId: parseInt(categoryId) }
-        : undefined,
+      where: whereClause,
       include: {
         category: true,
       },
