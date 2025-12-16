@@ -6,7 +6,8 @@ import { notifications } from '@mantine/notifications';
 import { toPng } from 'html-to-image';
 import { WeekSelector } from './WeekSelector';
 import { ViewOnlyDayColumn } from './ViewOnlyDayColumn';
-import { getMonday } from '@/lib/utils/date';
+import { ExportImageModal } from '@/components/modals/ExportImageModal';
+import { getMonday, getShortDayName } from '@/lib/utils/date';
 
 interface WeeklyPlan {
   id: number;
@@ -43,8 +44,9 @@ export function ViewOnlyWeekPlanner({
 }: ViewOnlyWeekPlannerProps) {
   const weeklyPlanRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportModalOpened, setExportModalOpened] = useState(false);
 
-  const handleExportPlan = async () => {
+  const handleExportPlan = async (selectedDays: number[]) => {
     try {
       setExporting(true);
       const element = weeklyPlanRef.current;
@@ -53,8 +55,20 @@ export function ViewOnlyWeekPlanner({
         throw new Error('Weekly plan element not found');
       }
 
-      // Store original styles to restore later
-      const originalStyles = {
+      // Store references to day columns and their original display styles
+      const dayColumns = Array.from(element.children) as HTMLElement[];
+      const originalStyles = dayColumns.map((col) => col.style.display);
+
+      // Hide non-selected day columns
+      dayColumns.forEach((column, index) => {
+        const dayOfWeek = index + 1;
+        if (!selectedDays.includes(dayOfWeek)) {
+          column.style.display = 'none';
+        }
+      });
+
+      // Store original container styles
+      const originalContainerStyles = {
         width: element.style.width,
         minWidth: element.style.minWidth,
         position: element.style.position,
@@ -66,39 +80,53 @@ export function ViewOnlyWeekPlanner({
       element.style.position = 'relative';
 
       // Wait for layout to settle
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
+      // Capture image
       const dataUrl = await toPng(element, {
         cacheBust: true,
         pixelRatio: 2,
         backgroundColor: '#f8f9fa',
-        width: element.scrollWidth, // Explicitly set width to full scrollable width
+        width: element.scrollWidth,
         height: element.scrollHeight,
       });
 
       // Restore original styles
-      element.style.width = originalStyles.width || '';
-      element.style.minWidth = originalStyles.minWidth || '';
-      element.style.position = originalStyles.position || '';
+      element.style.width = originalContainerStyles.width || '';
+      element.style.minWidth = originalContainerStyles.minWidth || '';
+      element.style.position = originalContainerStyles.position || '';
 
-      // Download as PNG
-      const link = document.createElement('a');
+      // Restore day columns display
+      dayColumns.forEach((column, index) => {
+        column.style.display = originalStyles[index] || '';
+      });
+
+      // Download with smart filename
       const monday = getMonday(selectedDate);
       const weekStartDate = monday.toISOString().split('T')[0];
-      link.download = `meal-plan-${weekStartDate}.png`;
+      const dayNames = selectedDays.map((d) => getShortDayName(d)).join('-');
+      const filename =
+        selectedDays.length === 7
+          ? `meal-plan-${weekStartDate}.png`
+          : `meal-plan-${weekStartDate}-${dayNames}.png`;
+
+      const link = document.createElement('a');
+      link.download = filename;
       link.href = dataUrl;
       link.click();
 
       notifications.show({
         title: 'Success',
-        message: 'Weekly plan exported as image',
+        message: 'Meal plan image exported successfully',
         color: 'green',
       });
+
+      setExportModalOpened(false);
     } catch (error) {
       console.error('Export error:', error);
       notifications.show({
         title: 'Error',
-        message: 'Failed to export weekly plan',
+        message: 'Failed to export meal plan image',
         color: 'red',
       });
     } finally {
@@ -129,7 +157,7 @@ export function ViewOnlyWeekPlanner({
       <WeekSelector
         selectedDate={selectedDate}
         onDateChange={onDateChange}
-        onExportPlan={handleExportPlan}
+        onExportPlan={() => setExportModalOpened(true)}
         exporting={exporting}
       />
 
@@ -159,6 +187,14 @@ export function ViewOnlyWeekPlanner({
           ))}
         </Flex>
       </div>
+
+      <ExportImageModal
+        opened={exportModalOpened}
+        onClose={() => setExportModalOpened(false)}
+        onExport={handleExportPlan}
+        loading={exporting}
+        weekMonday={monday}
+      />
     </Stack>
   );
 }

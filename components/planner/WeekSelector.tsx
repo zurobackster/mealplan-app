@@ -112,7 +112,7 @@ export function WeekSelector({
               onClick={onExportPlan}
               loading={exporting}
             >
-              Export Plan
+              Export Image
             </Button>
           )}
           <Button
